@@ -388,8 +388,24 @@ class MainWidget(QMainWindow):
         cf = getter.get_app_conf()
         projectPath = str(cf.get('baseconf', 'projectLocation'))
         # 删除原来的工程
-        shutil.rmtree(os.path.join(projectPath, 'autotestproject'))
+        try:
+            shutil.rmtree(os.path.join(projectPath, 'autotestproject'))
+        except Exception as e:
+            self.tipLabel.setText(e)
+            self.tipLabel.setPalette(self.pe_red)
+            return
         # 从git服务器上下载最新的测试工程
+        from git import Repo
+        try:
+            Repo.clone_from('https://github.com/ouguangqian/autotestproject.git', projectPath)
+        except:
+            self.tipLabel.setText('测试工程脚本下载失败，请联系相关负责人')
+            self.tipLabel.setPalette(self.pe_red)
+            return
+
+        # 复制配置文件
+        homeDir = os.path.expanduser('~')
+        shutil.copyfile(os.path.join(homeDir, 'config.ini'), os.path.join(projectPath, 'autotestproject', 'support', 'config.ini'))
 
         featurePath = os.path.join(projectPath, 'autotestproject', 'features')
         filelist = os.listdir(featurePath)
