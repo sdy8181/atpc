@@ -183,8 +183,8 @@ class MainWidget(QMainWindow):
         grid.addWidget(self.loopLabel, 2, 13, 1, 1)
         grid.addWidget(self.loopSpinbox, 2, 14, 1, 2)
 
-        grid.addWidget(featureLabel, 5, 1)
-        grid.addWidget(self.tipLabel, 5, 2, 1, 6)
+        grid.addWidget(featureLabel, 5, 1, 1, 2)
+        grid.addWidget(self.tipLabel, 5, 3, 1, 6)
         grid.addWidget(selectAllBtn, 5, 15)
         grid.addWidget(inverseAllBtn, 5, 16)
         grid.addWidget(addBtn, 5, 17)
