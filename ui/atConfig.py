@@ -100,12 +100,16 @@ class AtConfig(QWidget):
     # 保存配置项
     def saveConfigs(self):
 
-        cf = getter.get_app_conf()
-        projectPath = str(cf.get('baseconf', 'projectLocation'))
+        # cf = getter.get_app_conf()
+        # projectPath = str(cf.get('baseconf', 'projectLocation'))
 
-        atConfigPath = os.path.join(projectPath, 'support', 'config.ini')
+        # atConfigPath = os.path.join(projectPath, 'support', 'config.ini')
 
-        file = open(atConfigPath, 'w')
+        homeDir = os.path.expanduser('~')
+
+        file = open(os.path.join(homeDir, '.config.ini'), 'w')
+
+        # file = open(atConfigPath, 'w')
         file.writelines('[baseconf]')
         file.writelines('\n')
         file.writelines('player=' + self.playerTxt.text())
@@ -136,9 +140,12 @@ class AtConfig(QWidget):
     #  显示配置项
     def showConfigs(self):
 
-        cf = getter.get_app_conf()
-        projectPath = str(cf.get('baseconf', 'projectLocation'))
-        atConfigPath = os.path.join(projectPath, 'support', 'config.ini')
+        # cf = getter.get_app_conf()
+        # projectPath = str(cf.get('baseconf', 'projectLocation'))
+        # atConfigPath = os.path.join(projectPath, 'support', 'config.ini')
+        homeDir = os.path.expanduser('~')
+        atConfigPath = os.path.join(homeDir, '.config.ini')
+
         cf = ConfigParser()
         cf.read(atConfigPath)
         try:

@@ -389,11 +389,16 @@ class MainWidget(QMainWindow):
         projectPath = str(cf.get('baseconf', 'projectLocation'))
         # 删除原来的工程
         try:
-            shutil.rmtree(os.path.join(projectPath, 'autotestproject'))
+            fileList = os.listdir(projectPath)
+            for f in fileList:
+                testProjPath = os.path.join(projectPath, f)
+                if os.path.isfile(testProjPath):
+                    os.remove(testProjPath)
+                else:
+                    shutil.rmtree(testProjPath)
         except Exception as e:
-            self.tipLabel.setText(e)
+            self.tipLabel.setText(str(e))
             self.tipLabel.setPalette(self.pe_red)
-            return
         # 从git服务器上下载最新的测试工程
         from git import Repo
         try:
@@ -405,9 +410,9 @@ class MainWidget(QMainWindow):
 
         # 复制配置文件
         homeDir = os.path.expanduser('~')
-        shutil.copyfile(os.path.join(homeDir, 'config.ini'), os.path.join(projectPath, 'autotestproject', 'support', 'config.ini'))
+        shutil.copyfile(os.path.join(homeDir, '.config.ini'), os.path.join(projectPath,  'support', 'config.ini'))
 
-        featurePath = os.path.join(projectPath, 'autotestproject', 'features')
+        featurePath = os.path.join(projectPath, 'features')
         filelist = os.listdir(featurePath)
 
         if len(filelist) > 0:
