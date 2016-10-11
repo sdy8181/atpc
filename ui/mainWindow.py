@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 import shutil
+import subprocess
 import sys
 import threading
 import webbrowser
@@ -388,6 +389,13 @@ class MainWidget(QMainWindow):
         cf = getter.get_app_conf()
         projectPath = str(cf.get('baseconf', 'projectLocation'))
         # 删除原来的工程
+        # 先删除.git文件夹
+        git_dir_path = os.path.join(projectPath, '.git')
+        if sys.platform == 'linux':
+            shutil.rmtree(git_dir_path)
+        else:
+            subprocess.call('rd /q/s ' + git_dir_path, shell=True)
+
         try:
             fileList = os.listdir(projectPath)
             for f in fileList:
