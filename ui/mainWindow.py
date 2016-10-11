@@ -368,6 +368,11 @@ class MainWidget(QMainWindow):
 
     # 执行测试
     def run_tests(self):
+
+        self.tipLabel = ''
+        self.runBtn.setText('运行中')
+        self.runBtn.setEnabled(False)
+
         # 获取用例循环次数
         loopCnt = self.loopSpinbox.value()
 
@@ -391,10 +396,12 @@ class MainWidget(QMainWindow):
         # 删除原来的工程
         # 先删除.git文件夹
         git_dir_path = os.path.join(projectPath, '.git')
-        if sys.platform == 'linux':
-            shutil.rmtree(git_dir_path)
-        else:
-            subprocess.call('rd /q/s ' + git_dir_path, shell=True)
+
+        if os.path.exists(git_dir_path):
+            if sys.platform == 'linux':
+                shutil.rmtree(git_dir_path)
+            else:
+                subprocess.call('rd /q/s ' + git_dir_path, shell=True)
 
         try:
             fileList = os.listdir(projectPath)
@@ -503,8 +510,14 @@ class MainWidget(QMainWindow):
         reportPath = os.path.join(projectPath, 'reports', str(id), 'report.log')
 
         # os.system('behave  -k --junit --junit-directory ' + reportPath)
-        for i in range(int(loopCnt)):
-            os.system('behave  -k --show-source --show-timings --format plain --outfile ' + reportPath)
+        try:
+            for i in range(int(loopCnt)):
+                os.system('behave  -k --show-source --show-timings --format plain --outfile ' + reportPath)
+        except:
+            pass
+        finally:
+            self.runBtn.setText('运行')
+            self.runBtn.setEnabled(True)
 
         # 上传logcat日志信息到服务器端
         print('执行结束,更新任务状态')
