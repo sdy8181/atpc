@@ -6,6 +6,7 @@ import sys
 import threading
 import webbrowser
 from datetime import datetime
+import time
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtGui import QIcon
@@ -45,11 +46,18 @@ class MainWidget(QMainWindow):
         scriptSettingAction.setStatusTip('脚本配置')
         scriptSettingAction.triggered.connect(self.showScriptConf)
 
+        refreshAutotestScriptAction = QAction('&获取最新测试脚本', self)
+        refreshAutotestScriptAction.setStatusTip('获取最新测试脚本')
+        refreshAutotestScriptAction.triggered.connect(self.getLatestScript)
+
         menubar = self.menuBar()
         settingMenu = menubar.addMenu('设置')
         settingMenu.addAction(appSettingAction)
         settingMenu.addAction(scriptSettingAction)
         # menubar.setFixedHeight(22)
+
+        optionMenu = menubar.addMenu('操作')
+        optionMenu.addAction(refreshAutotestScriptAction)
 
         # 测试用例筛选
         appLabel = QLabel('模块名称:', self)
@@ -366,29 +374,8 @@ class MainWidget(QMainWindow):
         self.selected_feature_ids.clear()
         self.show_features()
 
-    # 执行测试
-    def run_tests(self):
-
-        self.tipLabel = ''
-        self.runBtn.setText('运行中')
-        self.runBtn.setEnabled(False)
-
-        # 获取用例循环次数
-        loopCnt = self.loopSpinbox.value()
-
-        date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f')
-        status = '执行中'
-        feature_ids = ''
-        # 根据选中的用例保存用例信息
-        for id in  self.selected_feature_ids:
-            if not len(feature_ids) == 0:
-                feature_ids += ','
-            feature_ids += str(id)
-
-        data = {'status': status, 'date_time': date_time, 'feature_ids': feature_ids}
-        ret_save = getter.save_task_history(data)
-        self.show_task_history()
-
+    # 获取最新测试脚本
+    def getLatestScript(self):
 
         # 生成测试用例文件
         cf = getter.get_app_conf()
@@ -417,15 +404,52 @@ class MainWidget(QMainWindow):
         # 从git服务器上下载最新的测试工程
         from git import Repo
         try:
-            Repo.clone_from('https://github.com/ouguangqian/autotestproject.git', projectPath)
-        except:
+            t = threading.Thread(target=Repo.clone_from, args=('https://github.com/ouguangqian/autotestproject.git', projectPath))
+            t.setDaemon(True)
+            t.start()
+            t.join()
+
+            # 复制配置文件
+            homeDir = os.path.expanduser('~')
+            shutil.copyfile(os.path.join(homeDir, '.config.ini'), os.path.join(projectPath,  'support', 'config.ini'))
+
+            # Repo.clone_from('https://github.com/ouguangqian/autotestproject.git', projectPath)
+        except Exception as e:
+            print(e)
             self.tipLabel.setText('测试工程脚本下载失败，请联系相关负责人')
             self.tipLabel.setPalette(self.pe_red)
             return
 
-        # 复制配置文件
-        homeDir = os.path.expanduser('~')
-        shutil.copyfile(os.path.join(homeDir, '.config.ini'), os.path.join(projectPath,  'support', 'config.ini'))
+        self.tipLabel.setText('测试脚本更新完成')
+        self.tipLabel.setPalette(self.pe_red)
+
+    # 执行测试
+    def run_tests(self):
+
+        self.tipLabel.setText('')
+        self.runBtn.setText('运行中')
+        self.runBtn.setEnabled(False)
+
+        # 获取用例循环次数
+        loopCnt = self.loopSpinbox.value()
+
+        date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f')
+        status = '执行中'
+        feature_ids = ''
+        # 根据选中的用例保存用例信息
+        for id in self.selected_feature_ids:
+            if not len(feature_ids) == 0:
+                feature_ids += ','
+            feature_ids += str(id)
+
+        data = {'status': status, 'date_time': date_time, 'feature_ids': feature_ids}
+        ret_save = getter.save_task_history(data)
+        self.show_task_history()
+
+
+        # 生成测试用例文件
+        cf = getter.get_app_conf()
+        projectPath = str(cf.get('baseconf', 'projectLocation'))
 
         featurePath = os.path.join(projectPath, 'features')
         filelist = os.listdir(featurePath)
