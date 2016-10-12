@@ -383,6 +383,7 @@ class MainWidget(QMainWindow):
         # 删除原来的工程
         # 先删除.git文件夹
         git_dir_path = os.path.join(projectPath, '.git')
+        git_url = str(cf.get('baseconf', 'gitUrlForScript'))
 
         if os.path.exists(git_dir_path):
             if sys.platform == 'linux':
@@ -404,7 +405,7 @@ class MainWidget(QMainWindow):
         # 从git服务器上下载最新的测试工程
         from git import Repo
         try:
-            t = threading.Thread(target=Repo.clone_from, args=('https://github.com/ouguangqian/autotestproject.git', projectPath))
+            t = threading.Thread(target=Repo.clone_from, args=(git_url, projectPath))
             t.setDaemon(True)
             t.start()
             t.join()

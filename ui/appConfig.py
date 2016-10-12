@@ -33,6 +33,11 @@ class AppConfig(QWidget):
         self.serverPortLabel = QLabel('服务器Port: ')
         self.serverPortTxt = QLineEdit()
 
+        self.gitUrlLabel = QLabel('测试脚本git地址: ')
+        self.gitUrlForScript = QLineEdit()
+        self.gitUrlForScript.setText('https://github.com/ouguangqian/autotestproject.git')
+
+
         self.okBtn = QPushButton('OK')
         self.okBtn.resize(self.okBtn.sizeHint())
         self.okBtn.clicked.connect(self.saveConfigs)
@@ -50,9 +55,11 @@ class AppConfig(QWidget):
         grid.addWidget(self.serverIpTxt, 2, 1, 1, 3)
         grid.addWidget(self.serverPortLabel, 3, 0)
         grid.addWidget(self.serverPortTxt, 3, 1, 1, 3)
-        grid.addWidget(self.okBtn, 7,2)
-        grid.addWidget(self.cancelBtn, 7, 3)
-        grid.setRowMinimumHeight(8, 30)
+        grid.addWidget(self.gitUrlLabel, 4, 0)
+        grid.addWidget(self.gitUrlForScript, 4, 1, 1, 3)
+        grid.addWidget(self.okBtn, 8,2)
+        grid.addWidget(self.cancelBtn, 8, 3)
+        grid.setRowMinimumHeight(9, 30)
         grid.setRowStretch(4, 1)
 
 
@@ -65,6 +72,7 @@ class AppConfig(QWidget):
         location = self.scriptLocationTxt.text()
         ip = self.serverIpTxt.text()
         port = self.serverPortTxt.text()
+        gitUrl = self.gitUrlForScript.text()
 
         print('要保存的配置信息为：', location, ip, port)
         # 获取当前用户目录并判断是否存在.atp.ini文件
@@ -79,6 +87,9 @@ class AppConfig(QWidget):
         file.writelines('\n')
         file.writelines('serverPort=' + port)
         file.writelines('\n')
+        file.writelines('gitUrlForScript=' + gitUrl)
+        file.writelines('\n')
+
 
         file.close()
 
@@ -93,7 +104,11 @@ class AppConfig(QWidget):
         if os.path.exists(iniPath):
             cf = ConfigParser()
             cf.read(iniPath)
-            self.scriptLocationTxt.setText(str(cf.get('baseconf', 'projectLocation')))
-            self.serverIpTxt.setText(str(cf.get('baseconf', 'serverIp')))
-            self.serverPortTxt.setText(str(cf.get('baseconf', 'serverPort')))
+            try:
+                self.scriptLocationTxt.setText(str(cf.get('baseconf', 'projectLocation')))
+                self.serverIpTxt.setText(str(cf.get('baseconf', 'serverIp')))
+                self.serverPortTxt.setText(str(cf.get('baseconf', 'serverPort')))
+                self.gitUrlForScript.setText(str(cf.get('baseconf','gitUrlForScript')))
+            except:
+                pass
 
