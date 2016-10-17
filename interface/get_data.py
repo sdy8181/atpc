@@ -55,6 +55,10 @@ class GetData:
         res = requests.get(self.get_request_url() + '/atp/feature/del/' + str(feature_id))
         return res.json()
 
+    def del_step_by_name(self, name):
+        res = requests.get(self.get_request_url() + '/atp/step/del/' + name)
+        return res.json()
+
     def save_task_history(self, data):
         res = requests.post(self.get_request_url() + '/atp/task/save', json=data)
         # print(res.json())
@@ -84,6 +88,15 @@ class GetData:
         res = requests.post(self.get_request_url() + '/atp/task/result/save', json=data)
         return res.json()
 
+    def update_step_info(self, data):
+        res = requests.post(self.get_request_url() + '/atp/step/info/update', json=data)
+        return res.json()
+
+
+    def get_step_info_by_name(self, name):
+        res = requests.get(self.get_request_url() + '/atp/step/info/' + name)
+        return res.json()
+
     # 通过任务ID获取任务历史记录
     def get_task_his_by_id(self, id):
         print(id)
@@ -106,7 +119,7 @@ class GetData:
             file_path = os.path.join(log_path, file)
             if os.path.isfile(file_path):
                 try:
-                    f = open(file_path, 'r',encoding='utf-8')
+                    f = open(file_path, 'r', encoding='utf-8')
                     for line in f:
                         time.sleep(0.001)
                         data = {'taskId': str(id), 'fileName': file, 'content': line}

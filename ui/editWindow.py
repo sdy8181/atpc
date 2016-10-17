@@ -84,8 +84,14 @@ class EditWindow(QWidget):
 
         self.stepCombo = QComboBox()
         self.stepCombo.addItem('所有')
-        self.stepCombo.addItem('操作')
-        self.stepCombo.addItem('验证')
+        self.stepCombo.addItem('音乐')
+        self.stepCombo.addItem('电台')
+        self.stepCombo.addItem('视频')
+        self.stepCombo.addItem('导航')
+        self.stepCombo.addItem('语音')
+        self.stepCombo.addItem('公共')
+        self.stepCombo.addItem('其他')
+
         self.stepCombo.setCurrentIndex(0)
         self.stepCombo.currentTextChanged.connect(self.show_steps)
 
@@ -370,9 +376,7 @@ class EditWindow(QWidget):
             # stepListItem.append(QListWidgetItem(st['name']))
 
             if keyword in st['name'] or keyword == '':
-                if step_type == '验证' and st['name'].startswith(step_type):
-                    stepListItem.append(QListWidgetItem(st['name']))
-                if step_type == '操作' and not st['name'].startswith('验证'):
+                if st['type'] == step_type:
                     stepListItem.append(QListWidgetItem(st['name']))
                 if step_type == '所有':
                     stepListItem.append(QListWidgetItem(st['name']))
