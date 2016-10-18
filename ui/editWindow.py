@@ -89,6 +89,7 @@ class EditWindow(QWidget):
         self.stepCombo.addItem('视频')
         self.stepCombo.addItem('导航')
         self.stepCombo.addItem('语音')
+        self.stepCombo.addItem('协议')
         self.stepCombo.addItem('公共')
         self.stepCombo.addItem('其他')
 

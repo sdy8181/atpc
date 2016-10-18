@@ -35,6 +35,7 @@ class StepManager(QWidget):
         self.moduleCombo.addItem('视频')
         self.moduleCombo.addItem('导航')
         self.moduleCombo.addItem('语音')
+        self.moduleCombo.addItem('协议')
         self.moduleCombo.addItem('公共')
         self.moduleCombo.addItem('其他')
 
