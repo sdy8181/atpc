@@ -34,6 +34,15 @@ class AtConfig(QWidget):
         self.deviceSerialLabel = QLabel('车机设备编号: ')
         self.deviceSerialTxt = QLineEdit()
 
+
+        ##wifi或者热点
+        self.deviceIPaddressLabel= QLabel('车机IP地址: ')
+        self.deviceIPaddressTxt = QLineEdit()
+
+        self.devicePcanBaudrate = QLabel('车机PCAN波特率: ')
+        self.devicePcanBaudrateTxt = QLineEdit()
+
+
         self.phoneSerialLabel = QLabel('手机设备编号: ')
         self.phoneSerialTxt = QLineEdit()
 
@@ -78,21 +87,27 @@ class AtConfig(QWidget):
         grid.addWidget(self.runLogDirTxt, 3, 1, 1, 3)
         grid.addWidget(self.deviceSerialLabel, 4, 0)
         grid.addWidget(self.deviceSerialTxt, 4, 1, 1, 3)
-        grid.addWidget(self.phoneSerialLabel, 5, 0)
-        grid.addWidget(self.phoneSerialTxt, 5, 1, 1, 3)
-        grid.addWidget(self.phoneBlueToothNameLabel, 6, 0)
-        grid.addWidget(self.phoneBlueToothNameTxt, 6, 1, 1, 3)
-        grid.addWidget(self.versionLabel, 7, 0)
-        grid.addWidget(self.versionTxt, 7, 1, 1, 3)
-        grid.addWidget(self.usbMusicLabel, 8, 0)
-        grid.addWidget(self.usbMusicTxt, 8, 1, 1, 3)
+        grid.addWidget(self.deviceIPaddressLabel, 5, 0)
+        grid.addWidget(self.deviceIPaddressTxt, 5, 1, 1, 3)
+        grid.addWidget(self.devicePcanBaudrate,6,0)
+        grid.addWidget(self.devicePcanBaudrateTxt,6,1,1,3)
+
+
+        grid.addWidget(self.phoneSerialLabel, 7, 0)
+        grid.addWidget(self.phoneSerialTxt, 7, 1, 1, 3)
+        grid.addWidget(self.phoneBlueToothNameLabel, 8, 0)
+        grid.addWidget(self.phoneBlueToothNameTxt, 8, 1, 1, 3)
+        grid.addWidget(self.versionLabel, 9, 0)
+        grid.addWidget(self.versionTxt, 9, 1, 1, 3)
+        grid.addWidget(self.usbMusicLabel, 10, 0)
+        grid.addWidget(self.usbMusicTxt, 10, 1, 1, 3)
         # grid.addWidget(self.socketIpLabel, 9, 0)
         # grid.addWidget(self.socketIpTxt, 9, 1, 1, 3)
         # grid.addWidget(self.socketPortLabel, 10, 0)
         # grid.addWidget(self.socketPortTxt, 10, 1, 1, 3)
-        grid.addWidget(self.okBtn, 11, 3)
-        grid.addWidget(self.cancelBtn, 11, 4)
-        grid.setRowMinimumHeight(12, 30)
+        grid.addWidget(self.okBtn, 12, 3)
+        grid.addWidget(self.cancelBtn, 12, 4)
+        grid.setRowMinimumHeight(13, 30)
 
         self.setLayout(grid)
         self.showConfigs()
@@ -121,6 +136,11 @@ class AtConfig(QWidget):
         file.writelines('\n')
         file.writelines('deviceSerial=' + self.deviceSerialTxt.text())
         file.writelines('\n')
+        file.writelines('deviceIPaddress=' + self.deviceIPaddressTxt.text())
+        file.writelines('\n')
+        file.writelines('devicePcanBaudrate=' + self.devicePcanBaudrateTxt.text())
+        file.writelines('\n')
+
         file.writelines('phoneSerial=' + self.phoneSerialTxt.text())
         file.writelines('\n')
         file.writelines('phoneBluetoothName=' + self.phoneBlueToothNameTxt.text())
@@ -159,6 +179,10 @@ class AtConfig(QWidget):
             self.voiceDirTxt.setText(str(cf.get('baseconf', 'voiceDir')))
             self.runLogDirTxt.setText(str(cf.get('baseconf', 'logPath')))
             self.deviceSerialTxt.setText(str(cf.get('baseconf', 'deviceSerial')))
+
+            self.deviceIPaddressTxt.setText(str(cf.get('baseconf', 'deviceIPaddress')))
+            self.devicePcanBaudrateTxt.setText(str(cf.get('baseconf','devicePcanBaudrate')))
+
             self.phoneSerialTxt.setText(str(cf.get('baseconf', 'phoneSerial')))
             self.phoneBlueToothNameTxt.setText(str(cf.get('baseconf', 'phoneBluetoothName')))
             self.versionTxt.setText(str(cf.get('baseconf', 'version')))
