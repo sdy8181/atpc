@@ -141,8 +141,6 @@ class AtConfig(QWidget):
         file.writelines('devicePcanBaudrate=' + self.devicePcanBaudrateTxt.text())
         file.writelines('\n')
 
-
-
         file.writelines('phoneSerial=' + self.phoneSerialTxt.text())
         file.writelines('\n')
         file.writelines('phoneBluetoothName=' + self.phoneBlueToothNameTxt.text())
@@ -183,7 +181,7 @@ class AtConfig(QWidget):
             self.deviceSerialTxt.setText(str(cf.get('baseconf', 'deviceSerial')))
 
             self.deviceIPaddressTxt.setText(str(cf.get('baseconf', 'deviceIPaddress')))
-            self.devicePcanBaudrateTxt.setText(cf.get('baseconf','devicePcanBaudrate'))
+            self.devicePcanBaudrateTxt.setText(str(cf.get('baseconf','devicePcanBaudrate')))
 
             self.phoneSerialTxt.setText(str(cf.get('baseconf', 'phoneSerial')))
             self.phoneBlueToothNameTxt.setText(str(cf.get('baseconf', 'phoneBluetoothName')))
