@@ -1,5 +1,6 @@
 # -×- coding -*-
 import os
+import shutil
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QGridLayout
@@ -100,8 +101,8 @@ class AtConfig(QWidget):
     # 保存配置项
     def saveConfigs(self):
 
-        # cf = getter.get_app_conf()
-        # projectPath = str(cf.get('baseconf', 'projectLocation'))
+        cf = getter.get_app_conf()
+        projectPath = str(cf.get('baseconf', 'projectLocation'))
 
         # atConfigPath = os.path.join(projectPath, 'support', 'config.ini')
 
@@ -136,6 +137,11 @@ class AtConfig(QWidget):
         file.close()
 
         self.close()
+
+       # 判断测试工程是否存在，存在就覆盖配置文件，不存在就什么都不做
+
+        if os.path.exists(os.path.join(projectPath, 'support')):
+            shutil.copyfile(os.path.join(homeDir, '.config.ini'), os.path.join(projectPath,  'support', 'config.ini'))
 
     #  显示配置项
     def showConfigs(self):
