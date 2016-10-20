@@ -121,12 +121,15 @@ class EditWindow(QWidget):
 
          # 创建用例步骤参数列表
         self.stepParamview = QTableWidget()
-        self.stepParamview.setColumnCount(2)
-        self.stepParamview.setHorizontalHeaderLabels(['参数名', '参数值'])
-        self.stepParamview.setColumnWidth(0, 180)
+        self.stepParamview.setColumnCount(3)
+        self.stepParamview.setColumnHidden(0, True)
+        self.stepParamview.setHorizontalHeaderLabels(['', '参数名', '参数值'])
+        self.stepParamview.setColumnWidth(1, 180)
         self.stepParamview.horizontalHeader().setStretchLastSection(True)
         # 单元格发生变化就触发保存操作
         self.stepParamview.cellChanged.connect(self.save_step_to_feature)
+
+        self.stepTip = QLabel(self)
 
         # 保存和取消按钮
         saveBtn = QPushButton('保存')
@@ -155,7 +158,9 @@ class EditWindow(QWidget):
         # grid.addWidget(saveStepBtn, 2, 9)
 
         grid.addWidget(self.featureview, 3, 3, 20, 3)
-        grid.addWidget(self.stepParamview, 3, 6, 20, 4)
+        grid.addWidget(self.stepParamview, 3, 6, 10, 4)
+
+        grid.addWidget(self.stepTip, 14, 6, 4, 4)
 
         grid.addWidget(saveBtn, 24, 8)
         grid.addWidget(cancelBtn, 24, 9)
@@ -189,13 +194,18 @@ class EditWindow(QWidget):
        # 往用例列表中添加信息
         params = getter.get_step_params(step_txt)
         paramsList = []
+        step_desc = ''
         for pa in params:
             p = {}
             p['name'] = pa['param']
-            p['value'] = ''
+            p['value'] = None
+            p['param_desc'] = pa['param_desc']
+
             print(pa['param'])
             paramsList.append(p)
-        stepInfo = {'name': step_txt, 'params': paramsList}
+            step_desc = pa['step_desc']
+
+        stepInfo = {'name': step_txt, 'params': paramsList, 'step_desc': step_desc}
 
         self.feature_steps_info.append(stepInfo)
         print(self.feature_steps_info)
@@ -252,6 +262,8 @@ class EditWindow(QWidget):
     # 获取步骤的参数信息
     def get_step_params(self):
 
+        self.stepTip.clear()
+
         # 从列表中获取参数名和参数值
         idx = self.featureview.currentRow()
         if idx < 0:
@@ -259,16 +271,29 @@ class EditWindow(QWidget):
             return
 
         params = self.feature_steps_info[idx]['params']
+
+        if self.feature_steps_info[idx]['step_desc'] is not None:
+            self.stepTip.setText(self.feature_steps_info[idx]['step_desc'])
+
+
         self.stepParamview.setRowCount(0)
         if len(params) == 0:
+            return
+
+        print(params)
+
+        if len(params) > 0 and not params[0]['name']:
             return
 
         for i in range(len(params)):
             self.stepParamview.insertRow(i)
             self.stepParamview.setCellWidget(i, 0, QLabel(params[i]['name']))
-            self.stepParamview.setItem(i, 1, QTableWidgetItem(params[i]['value']))
-            # print(params[i]['name'])
-            # print(params[i]['value'])
+            if params[i]['param_desc'] is not None and params[i]['param_desc'] != '':
+                self.stepParamview.setCellWidget(i, 1, QLabel(params[i]['param_desc']))
+            else:
+                self.stepParamview.setCellWidget(i, 1, QLabel(params[i]['name']))
+
+            self.stepParamview.setItem(i, 2, QTableWidgetItem(params[i]['value']))
 
     # 保存步骤信息到用例
     def save_step_to_feature(self):
@@ -279,7 +304,7 @@ class EditWindow(QWidget):
             params = self.feature_steps_info[idx]['params']
             for j in range(len(params)):
                 if params[j]['name'] == self.stepParamview.cellWidget(i, 0).text():
-                    params[j]['value'] = self.stepParamview.item(i, 1).text()
+                    params[j]['value'] = self.stepParamview.item(i, 2).text()
                     break
 
     # 刷新feature视图列表
@@ -427,9 +452,10 @@ class EditWindow(QWidget):
                     step_id = fs['id']
                     step_info = getter.get_step_info_by_id(step_id)
                     step_name = step_info['name']
+                    step_desc = step_info['step_desc']
                     step_idx = fs['idx']
                     params = fs['params']
-                    st = {'name': step_name, 'params': params}
+                    st = {'name': step_name, 'params': params, 'step_desc': step_desc}
                     self.feature_steps_info.insert(step_idx,st)
             else:
                 pass
