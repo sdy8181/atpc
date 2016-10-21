@@ -3,9 +3,11 @@ import os
 import shutil
 import subprocess
 import sys
+import socket
 import threading
 import webbrowser
 from datetime import datetime
+
 import time
 
 from PyQt5.QtGui import QFont
@@ -22,6 +24,7 @@ from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QSpinBox
 from PyQt5.QtWidgets import QTableWidget
 from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QProgressBar
 from PyQt5.QtCore import Qt
 from ui.appConfig import AppConfig
 from interface.get_data import getter
@@ -32,6 +35,10 @@ from ui.viewResult import ViewResult
 class MainWidget(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.runFlag = False
+        self.features_runned_cnt = 0
+        self.selected_features_cnt = 0
 
     def initUI(self):
         # 设置布局方式
@@ -85,6 +92,11 @@ class MainWidget(QMainWindow):
 
         self.jenkinsLink = QPushButton('持续集成>>')
         self.jenkinsLink.clicked.connect(self.openJenkinsBrowser)
+
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setGeometry(30, 40, 200, 25)
+        self.progressBar.setValue(30 / 55 * 100)
+        self.progressBar.hide()
 
 
         self.search_txt = QLineEdit(self)
@@ -173,17 +185,17 @@ class MainWidget(QMainWindow):
 
         grid.setRowMinimumHeight(0,20)
 
-        grid.addWidget(appLabel, 1, 1)
-        grid.addWidget(self.audioCheckbox, 1, 2)
-        grid.addWidget(self.radioCheckbox, 1, 3)
-        grid.addWidget(self.ivokaCheckbox, 1, 4)
-        grid.addWidget(self.videoCHeckbox, 1, 5)
+        grid.addWidget(appLabel, 0, 1)
+        grid.addWidget(self.audioCheckbox, 0, 2)
+        grid.addWidget(self.radioCheckbox, 0, 3)
+        grid.addWidget(self.ivokaCheckbox, 0, 4)
+        grid.addWidget(self.videoCHeckbox, 0, 5)
 
-        grid.addWidget(tagLabel, 1, 6)
-        grid.addWidget(self.baseScenCheckbox, 1, 7)
-        grid.addWidget(self.mutiScenCheckbox, 1, 8)
-        grid.addWidget(self.btScenCheckbox, 1, 9)
-        grid.addWidget(self.ivokaScenCheckbox, 1, 10)
+        grid.addWidget(tagLabel, 1, 1)
+        grid.addWidget(self.baseScenCheckbox, 1, 2)
+        grid.addWidget(self.mutiScenCheckbox, 1, 3)
+        grid.addWidget(self.btScenCheckbox, 1, 4)
+        grid.addWidget(self.ivokaScenCheckbox, 1, 5)
         grid.addWidget(self.jenkinsLink, 1, 19)
 
         grid.addWidget(self.search_txt, 2, 1, 1, 10)
@@ -201,7 +213,8 @@ class MainWidget(QMainWindow):
         grid.addWidget(refreshBtn, 5, 19)
 
         grid.addWidget(self.featureTable, 7, 1, 15, 19)
-        grid.addWidget(resultLabel, 22, 1, 2, 19)
+        grid.addWidget(resultLabel, 22, 1, 2, 2)
+        grid.addWidget(self.progressBar, 22, 3, 2, 9)
         grid.addWidget(self.resultTable, 24, 1, 10, 19)
 
         grid.setColumnMinimumWidth(5, 200)
@@ -225,10 +238,13 @@ class MainWidget(QMainWindow):
 
         self.selected_feature_ids = []
 
-        # global t_http
-        # t_http = threading.Thread(target=self.run_http_server)
-        # t_http.setDaemon(True)
-        # t_http.start()
+        # 启动socket服务，来接收已经执行的用例数量
+
+        t_socket_server = threading.Thread(target=self.start_socket_server)
+        t_socket_server.setDaemon(True)
+        t_socket_server.start()
+
+        # 展示界面元素
 
         self.show()
 
@@ -248,7 +264,7 @@ class MainWidget(QMainWindow):
     # 展示 刷新测试用例
     def show_features(self):
         self.tipLabel.clear()
-        sce_type_filter=[]
+        sce_type_filter = []
         if self.baseScenCheckbox.isChecked():
             sce_type_filter.append(self.baseScenCheckbox.text())
         if self.mutiScenCheckbox.isChecked():
@@ -426,10 +442,61 @@ class MainWidget(QMainWindow):
 
     # 执行测试
     def run_tests(self):
-
+        global t
+        # 设置运行按钮展示字符
+        self.runFlag = not self.runFlag
         self.tipLabel.setText('')
-        self.runBtn.setText('运行中')
-        self.runBtn.setEnabled(False)
+
+        if self.runFlag:
+
+            self.selected_features_cnt = len(self.selected_feature_ids)
+            self.features_runned_cnt = 0
+            print(self.selected_features_cnt)
+            self.progressBar.show()
+            self.progressBar.setValue(0)
+            self.runBtn.setText('停止')
+
+        else:
+            self.progressBar.hide()
+            self.runBtn.setText('运行')
+            print('用例运行状态为: ' + str(t.is_alive()))
+            if t.is_alive():
+                if sys.platform == 'linux':
+                    ret = subprocess.Popen('ps -ef | grep behave', stdout=subprocess.PIPE, shell=True).stdout.readlines()
+                    for r in ret:
+                        r = r.decode().strip()
+                        if 'grep' in r:
+                            continue
+
+                        while '  ' in r:
+                            r = r.replace('  ', ' ')
+                        rlist = r.split(' ')
+
+                        pid = rlist[1]
+                        print('pid:' + pid)
+                        try:
+                            subprocess.call('kill -9 ' + pid, shell=True)
+                        except Exception as e:
+                            self.tipLabel.setText('用例停止失败，可以尝试重启应用解决')
+                            print(e)
+                else:
+                    ret = subprocess.Popen('tasklist -V | findstr behave', stdout=subprocess.PIPE).stdout.readlines()
+                    for r in ret:
+                        r = r.decode('unicode_escape').strip()
+                        while '  ' in r:
+                            r = r.replace('  ', ' ')
+
+                        rlist = r.split(' ')
+                        pid = rlist[1]
+                        try:
+                            print(rlist[1])
+                            subprocess.call('taskkill /T /F /pid ' + pid, shell=True)
+                            break
+                        except Exception as e:
+                            self.tipLabel.setText('用例停止失败，可以尝试重启应用解决')
+                            print(e)
+            return
+
 
         # 获取用例循环次数
         loopCnt = self.loopSpinbox.value()
@@ -482,7 +549,11 @@ class MainWidget(QMainWindow):
             file.writelines('场景: ' + feature['sce_name'])
             file.writelines('\n')
             # 根据名称 获取关联的步骤场景
-            feature_steps_relationship = getter.get_featrue_step_relationship(feature['sce_name'])
+            try:
+                feature_steps_relationship = getter.get_featrue_step_relationship(feature['sce_name'])
+            except:
+                self.tipLabel.setText('获取步骤信息错误，可能步骤被删除')
+
             if len(feature_steps_relationship) > 0:
                 feature_steps_info = []
                 for fs in feature_steps_relationship:
@@ -523,7 +594,6 @@ class MainWidget(QMainWindow):
         # 运行测试用例
         os.chdir(projectPath)
         # 调用运行测试用例函数
-        global t
         t = threading.Thread(target=self.run_behave_cmd, args=(ret_save['id'], loopCnt))
         t.setDaemon(True)
         t.start()
@@ -541,6 +611,7 @@ class MainWidget(QMainWindow):
         except:
             pass
         finally:
+            self.progressBar.hide()
             self.runBtn.setText('运行')
             self.runBtn.setEnabled(True)
 
@@ -591,6 +662,27 @@ class MainWidget(QMainWindow):
     #                 os.system('taskkill /F /pid ' + pid)
     #                 break
     #         os.system('python -m http.server 9527')
+
+    def start_socket_server(self):
+
+        socket_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_server.bind(('localhost', 8899))
+        socket_server.listen(1)
+        while True:
+            print('ready to accept')
+            con, addr = socket_server.accept()
+            try:
+                buf = con.recv(1024).decode('utf-8')
+                print(buf)
+                self.features_runned_cnt += 1
+                print(self.features_runned_cnt)
+                self.progressBar.setValue(self.features_runned_cnt / self.selected_features_cnt * 100)
+                print('aaa')
+            except Exception as e:
+                print(e)
+                self.tipLabel.setText('读取用例执行进度数据异常')
+                self.tipLabel.setPalette(self.pe_red)
+
 
     def selectAllFeatures(self):
         rowCnt = self.featureTable.rowCount()

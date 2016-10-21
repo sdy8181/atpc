@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QSpinBox
 from PyQt5.QtWidgets import QTableWidget
 from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtWidgets import QWidget
 from PyQt5 import Qt
 
@@ -121,15 +122,18 @@ class EditWindow(QWidget):
 
          # 创建用例步骤参数列表
         self.stepParamview = QTableWidget()
-        self.stepParamview.setColumnCount(3)
-        self.stepParamview.setColumnHidden(0, True)
-        self.stepParamview.setHorizontalHeaderLabels(['', '参数名', '参数值'])
-        self.stepParamview.setColumnWidth(1, 180)
+        self.stepParamview.setColumnCount(2)
+        self.stepParamview.setHorizontalHeaderLabels(['参数名', '参数值'])
+        self.stepParamview.setColumnWidth(0, 180)
         self.stepParamview.horizontalHeader().setStretchLastSection(True)
         # 单元格发生变化就触发保存操作
         self.stepParamview.cellChanged.connect(self.save_step_to_feature)
 
-        self.stepTip = QLabel(self)
+        self.stepLabel = QLabel(self)
+        self.stepLabel.setText('步骤信息:')
+
+        self.stepTip = QTextEdit(self)
+        self.stepTip.setEnabled(False)
 
         # 保存和取消按钮
         saveBtn = QPushButton('保存')
@@ -137,7 +141,7 @@ class EditWindow(QWidget):
         cancelBtn.clicked.connect(self.close)
         saveBtn.clicked.connect(self.save_feature)
 
-        grid.addWidget(featureLabel, 0 ,0)
+        grid.addWidget(featureLabel, 0, 0)
         grid.addWidget(self.featureName, 0, 1, 1, 8)
         grid.addWidget(self.flagLabel, 0, 9)
         grid.addWidget(appLabel, 1, 3)
@@ -159,8 +163,8 @@ class EditWindow(QWidget):
 
         grid.addWidget(self.featureview, 3, 3, 20, 3)
         grid.addWidget(self.stepParamview, 3, 6, 10, 4)
-
-        grid.addWidget(self.stepTip, 14, 6, 4, 4)
+        grid.addWidget(self.stepLabel, 14, 6, 1, 1)
+        grid.addWidget(self.stepTip, 15, 6, 8, 4)
 
         grid.addWidget(saveBtn, 24, 8)
         grid.addWidget(cancelBtn, 24, 9)
@@ -199,8 +203,6 @@ class EditWindow(QWidget):
             p = {}
             p['name'] = pa['param']
             p['value'] = None
-            p['param_desc'] = pa['param_desc']
-
             print(pa['param'])
             paramsList.append(p)
             step_desc = pa['step_desc']
@@ -275,7 +277,6 @@ class EditWindow(QWidget):
         if self.feature_steps_info[idx]['step_desc'] is not None:
             self.stepTip.setText(self.feature_steps_info[idx]['step_desc'])
 
-
         self.stepParamview.setRowCount(0)
         if len(params) == 0:
             return
@@ -288,12 +289,7 @@ class EditWindow(QWidget):
         for i in range(len(params)):
             self.stepParamview.insertRow(i)
             self.stepParamview.setCellWidget(i, 0, QLabel(params[i]['name']))
-            if params[i]['param_desc'] is not None and params[i]['param_desc'] != '':
-                self.stepParamview.setCellWidget(i, 1, QLabel(params[i]['param_desc']))
-            else:
-                self.stepParamview.setCellWidget(i, 1, QLabel(params[i]['name']))
-
-            self.stepParamview.setItem(i, 2, QTableWidgetItem(params[i]['value']))
+            self.stepParamview.setItem(i, 1, QTableWidgetItem(params[i]['value']))
 
     # 保存步骤信息到用例
     def save_step_to_feature(self):
@@ -304,7 +300,7 @@ class EditWindow(QWidget):
             params = self.feature_steps_info[idx]['params']
             for j in range(len(params)):
                 if params[j]['name'] == self.stepParamview.cellWidget(i, 0).text():
-                    params[j]['value'] = self.stepParamview.item(i, 2).text()
+                    params[j]['value'] = self.stepParamview.item(i, 1).text()
                     break
 
     # 刷新feature视图列表
@@ -348,29 +344,9 @@ class EditWindow(QWidget):
     # 添加标签到用例信息中
     def add_module_to_feature(self, item):
         self.feature_info['module'] = item
-        # if item == '音乐':
-        #     self.feature_info['module'] = 'music'
-        # elif item == '语音':
-        #     self.feature_info['module'] = 'ivoka'
-        # elif item == '视频':
-        #     self.feature_info['module'] = 'video'
-        # elif item == '电台':
-        #     self.feature_info['module'] = 'radio'
-        # else:
-        #     self.feature_info['module'] = ''
 
     def add_tags_to_feature(self, item):
         self.feature_info['tags'] = item
-        # if item == '基本场景':
-        #     self.feature_info['tags'] = '@baseScen'
-        # elif item == '复杂场景':
-        #     self.feature_info['tags'] = '@complexScen'
-        # elif item == '蓝牙场景':
-        #     self.feature_info['tags'] = '@btScen'
-        # elif item == '语音场景':
-        #     self.feature_info['tags'] = '@ivokaScen'
-        # else:
-        #     self.feature_info['tags'] = ''
 
     # 校验场景信息是否完整
     def chk_sce_name(self, sce_name):
@@ -417,31 +393,8 @@ class EditWindow(QWidget):
             self.feature_info['tags'] = feature_info['tags']
             self.tagCombo.setCurrentText(self.feature_info['tags'])
 
-            # if self.feature_info['tags'] == '@baseScen':
-            #     self.tagCombo.setCurrentText('基本场景')
-            # elif self.feature_info['tags'] == '@complexScen':
-            #     self.tagCombo.setCurrentText('复杂场景')
-            # elif self.feature_info['tags'] == '@btScen':
-            #     self.tagCombo.setCurrentText('蓝牙场景')
-            # elif self.feature_info['tags'] == '@ivokaScen':
-            #     self.tagCombo.setCurrentText('语音场景')
-            # else:
-            #     pass
-
             self.feature_info['module'] = feature_info['module']
             self.appCombo.setCurrentText(self.feature_info['module'])
-
-            # if self.feature_info['module'] == 'music':
-            #     self.appCombo.setCurrentText('音乐')
-            # elif self.feature_info['module'] == 'ivoka':
-            #     self.appCombo.setCurrentText('语音')
-            # elif self.feature_info['module'] == 'video':
-            #     self.appCombo.setCurrentText('视频')
-            # elif self.feature_info['module'] == 'radio':
-            #     self.appCombo.setCurrentText('电台')
-            # else:
-            #     # self.appCombo.setCurrentIndex(0)
-            #     pass
 
             self.feature_info['name'] = feature_info['sce_name']
             feature_step_info = getter.get_featrue_step_relationship(sce_name)

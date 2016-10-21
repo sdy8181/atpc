@@ -3,7 +3,7 @@ import sys
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QLineEdit, QTextEdit
+from PyQt5.QtWidgets import QLineEdit, QTextEdit, QProgressBar
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QComboBox
@@ -47,10 +47,6 @@ class StepManager(QWidget):
         self.paramNameValue = QLineEdit(self)
         self.paramNameValue.setEnabled(False)
 
-        self.paramDescLabel = QLabel('参数描述:', self)
-        self.paramDescValue = QLineEdit(self)
-        self.paramDescValue.setPlaceholderText('多个参数描述中间用"|"分隔')
-
         self.saveBtn = QPushButton('保存', self)
         self.saveBtn.clicked.connect(self.save)
         self.delBtn = QPushButton('删除', self)
@@ -63,19 +59,21 @@ class StepManager(QWidget):
         self.pe_red = QPalette()
         self.pe_red.setColor(QPalette.WindowText, Qt.Qt.red)
 
+        self.bar = QProgressBar(self)
+        self.bar.setGeometry(30, 40, 200, 25)
+        self.bar.setValue(30 / 55 * 100)
 
         grid.addWidget(self.stepList, 0, 1, 5, 3)
         grid.addWidget(self.moduleLabel, 0, 5, 1, 1)
         grid.addWidget(self.moduleCombo, 0, 6, 1, 1)
 
-        grid.addWidget(self.stepDescLabel, 1, 5,1, 1)
+        grid.addWidget(self.stepDescLabel, 1, 5, 1, 1)
         grid.addWidget(self.stepDescValue, 1, 6, 2, 4)
 
         grid.addWidget(self.paramNameLabel, 3, 5, 1, 1)
         grid.addWidget(self.paramNameValue, 3, 6, 1, 4)
 
-        grid.addWidget(self.paramDescLabel, 4, 5, 1, 1)
-        grid.addWidget(self.paramDescValue, 4, 6, 1, 4)
+        grid.addWidget(self.bar, 4, 5, 1, 4)
 
         grid.addWidget(self.tipText, 5, 7, 1, 2)
 
@@ -104,22 +102,10 @@ class StepManager(QWidget):
             self.tipText.setPalette(self.pe_red)
             return
 
-        param_name = self.paramNameValue.text()
-        param_desc = self.paramDescValue.text()
-        if param_name == '':
-            param_name = None
-            param_desc = None
-        elif not len(self.paramNameValue.text().split('|')) == len(self.paramDescValue.text().split('|')):
-                self.tipText.setText('请填写参数描述信息')
-                self.tipText.setPalette(self.pe_red)
-                return
-
         self.tipText.clear()
         data = {'name': self.stepList.item(self.stepList.currentRow()).text(),
                 'type': self.moduleCombo.currentText(),
                 'step_desc': self.stepDescValue.toPlainText(),
-                'param_name': param_name,
-                'param_desc': param_desc
                 }
 
         res = getter.update_step_info(data)
@@ -130,7 +116,6 @@ class StepManager(QWidget):
     def show_step(self):
         self.tipText.clear()
         self.stepDescValue.clear()
-        self.paramDescValue.clear()
         self.paramNameValue.clear()
 
         step_name = self.stepList.item(self.stepList.currentRow()).text()
@@ -144,17 +129,10 @@ class StepManager(QWidget):
         if st_info['step_desc']:
             self.stepDescValue.setText(st_info['step_desc'])
 
-        if st_info['param_name'] is not None: #and len(st_info['param_name']) > 0:
-            self.paramDescValue.setEnabled(True)
+        if st_info['param_name'] is not None:  # and len(st_info['param_name']) > 0:
             self.paramNameValue.setText(st_info['param_name'])
-            self.paramDescValue.setText(st_info['param_desc'])
         else:
             self.paramNameValue.clear()
-            self.paramDescValue.clear()
-            self.paramDescValue.setEnabled(False)
-
-
-
 
     def del_step(self):
         if self.stepList.currentRow() == -1:
@@ -164,7 +142,6 @@ class StepManager(QWidget):
         step_name = self.stepList.item(self.stepList.currentRow()).text()
         getter.del_step_by_name(step_name)
         self.showSteps()
-
 
 
 if __name__ == '__main__':
