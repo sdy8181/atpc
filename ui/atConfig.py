@@ -52,7 +52,8 @@ class AtConfig(QWidget):
         self.versionLabel = QLabel('测试版本编号: ')
 
         self.versionTxt = QLineEdit()
-        self.versionTxt.setPlaceholderText('2.0 or 1.0')
+        self.versionTxt.setPlaceholderText('2.0 or 1.0, default 2.0')
+        self.versionTxt.setText('2.0')
 
         self.usbMusicLabel = QLabel('usb音乐名列表: ')
 

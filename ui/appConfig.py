@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QComboBox
 from configparser import ConfigParser
 from PyQt5 import Qt
 
@@ -34,8 +35,9 @@ class AppConfig(QWidget):
         self.serverPortTxt = QLineEdit()
 
         self.gitUrlLabel = QLabel('测试脚本git地址: ')
-        self.gitUrlForScript = QLineEdit()
-        self.gitUrlForScript.setText('https://github.com/ouguangqian/autotestproject.git')
+        self.gitUrlForScript = QComboBox()
+        self.gitUrlForScript.addItem('https://github.com/ouguangqian/autotestproject.git')
+        # self.gitUrlForScript.setText('https://github.com/ouguangqian/autotestproject.git')
 
 
         self.okBtn = QPushButton('OK')
@@ -72,7 +74,7 @@ class AppConfig(QWidget):
         location = self.scriptLocationTxt.text()
         ip = self.serverIpTxt.text()
         port = self.serverPortTxt.text()
-        gitUrl = self.gitUrlForScript.text()
+        gitUrl = self.gitUrlForScript.currentText()
 
         print('要保存的配置信息为：', location, ip, port)
         # 获取当前用户目录并判断是否存在.atp.ini文件
@@ -108,7 +110,7 @@ class AppConfig(QWidget):
                 self.scriptLocationTxt.setText(str(cf.get('baseconf', 'projectLocation')))
                 self.serverIpTxt.setText(str(cf.get('baseconf', 'serverIp')))
                 self.serverPortTxt.setText(str(cf.get('baseconf', 'serverPort')))
-                self.gitUrlForScript.setText(str(cf.get('baseconf','gitUrlForScript')))
+                self.gitUrlForScript.setCurrentText(str(cf.get('baseconf','gitUrlForScript')))
             except:
                 pass
 
