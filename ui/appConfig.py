@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+
+from PyQt5.QtGui import QStandardItem
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QLabel
@@ -8,6 +10,8 @@ from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtWidgets import QListView
 from configparser import ConfigParser
 from PyQt5 import Qt
 
@@ -37,6 +41,15 @@ class AppConfig(QWidget):
         self.gitUrlLabel = QLabel('测试脚本git地址: ')
         self.gitUrlForScript = QComboBox()
         self.gitUrlForScript.addItem('https://github.com/ouguangqian/autotestproject.git')
+        # models = QStandardItemModel()
+        # item = QStandardItem('aaaa')
+        # item.setFlags(Qt.Qt.ItemIsUserCheckable | Qt.Qt.ItemIsEnabled)
+        # item.setCheckState(Qt.Qt.Checked)
+        # models.appendRow(item)
+
+        # view = QListView()
+        # view.setModel(models)
+
         # self.gitUrlForScript.setText('https://github.com/ouguangqian/autotestproject.git')
 
 
@@ -61,6 +74,8 @@ class AppConfig(QWidget):
         grid.addWidget(self.gitUrlForScript, 4, 1, 1, 3)
         grid.addWidget(self.okBtn, 8,2)
         grid.addWidget(self.cancelBtn, 8, 3)
+        # grid.addWidget(view, 9, 3)
+
         grid.setRowMinimumHeight(9, 30)
         grid.setRowStretch(4, 1)
 

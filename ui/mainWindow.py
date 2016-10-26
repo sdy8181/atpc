@@ -10,11 +10,14 @@ from datetime import datetime
 
 import time
 
+from PyQt5.QtGui import QBrush
+from PyQt5.QtGui import QColor
 from PyQt5.QtGui import QFont
 from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QAbstractItemView
 from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QFrame
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMainWindow
@@ -29,20 +32,33 @@ from PyQt5.QtCore import Qt
 from ui.appConfig import AppConfig
 from interface.get_data import getter
 from ui.atConfig import AtConfig
+
 from ui.editWindow import EditWindow
 from ui.viewResult import ViewResult
 
 class MainWidget(QMainWindow):
+
     def __init__(self):
         super().__init__()
+
+        self.setGeometry(30, 30, 1420, 800)
+        self.setWindowTitle('QGATP')
+        self.setWindowIcon(QIcon('./images/icon.jpg'))
+
 
         self.runFlag = False
         self.features_runned_cnt = 0
         self.selected_features_cnt = 0
 
+        self.hide_flag = True   # 筛选项隐藏标识， 默认隐藏
+        self.hide_row = 4  # 筛选项组数
+        self.grid = QGridLayout()
+
+        # 已经勾选的关键词
+
+        self.filter_words = {'module_words': [], 'scen_words': [], 'author_words': []}
+
     def initUI(self):
-        # 设置布局方式
-        grid = QGridLayout()
 
         #  菜单设置
         appSettingAction = QAction('&应用设置', self)
@@ -57,6 +73,10 @@ class MainWidget(QMainWindow):
         refreshAutotestScriptAction.setStatusTip('获取最新测试脚本')
         refreshAutotestScriptAction.triggered.connect(self.getLatestScript)
 
+        settingCasesFilterAction = QAction('&用例筛选设置', self)
+        settingCasesFilterAction.setStatusTip('用例筛选设置')
+        settingCasesFilterAction.triggered.connect(self.showFilterSetting)
+
         menubar = self.menuBar()
         settingMenu = menubar.addMenu('设置')
         settingMenu.addAction(appSettingAction)
@@ -65,30 +85,41 @@ class MainWidget(QMainWindow):
 
         optionMenu = menubar.addMenu('操作')
         optionMenu.addAction(refreshAutotestScriptAction)
+        optionMenu.addAction(settingCasesFilterAction)
 
-        # 测试用例筛选
-        appLabel = QLabel('模块名称:', self)
-        self.audioCheckbox = QCheckBox('音乐', self)
-        self.radioCheckbox = QCheckBox('电台', self)
-        self.ivokaCheckbox = QCheckBox('语音', self)
-        self.videoCHeckbox = QCheckBox('视频', self)
+        # 设置筛选隐藏动作
+        self.hideBtn = QPushButton('筛选>>', self)
+        self.hideBtn.clicked.connect(self.hide_case_filter)
 
-        self.audioCheckbox.stateChanged.connect(self.show_features)
-        self.radioCheckbox.stateChanged.connect(self.show_features)
-        self.ivokaCheckbox.stateChanged.connect(self.show_features)
-        self.videoCHeckbox.stateChanged.connect(self.show_features)
+        self.filter_type_table = QTableWidget()
+        self.filter_type_table.horizontalHeader().setVisible(False)
+        self.filter_type_table.verticalHeader().setVisible(False)
+        self.filter_type_table.horizontalScrollBar().setVisible(False)
+
+        self.filter_type_table.setShowGrid(False)
+        self.filter_type_table.setFrameShape(QFrame.NoFrame)
+        self.filter_type_table.resizeColumnsToContents()
+        self.filter_type_table.resizeRowsToContents()
+
+        self.filter_type_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.filter_type_table.setFixedHeight(self.height()/20*3.5)
+        self.filter_type_table.setRowCount(4)
+        self.filter_type_table.setColumnCount(21)
+        self.filter_type_table.setItem(0, 0, QTableWidgetItem('模块名称:'))
+        self.filter_type_table.setSpan(1, 0, 2, 1)
+        self.filter_type_table.setItem(1, 0, QTableWidgetItem('用例类型:'))
+        self.filter_type_table.item(1, 0).setTextAlignment(Qt.AlignTop)
+
+        self.filter_type_table.setItem(3, 0, QTableWidgetItem('人员分类:'))
 
 
-        tagLabel = QLabel('用例类型:', self)
-        self.baseScenCheckbox = QCheckBox('基本场景', self)
-        self.mutiScenCheckbox = QCheckBox('复杂场景', self)
-        self.btScenCheckbox = QCheckBox('蓝牙电话场景', self)
-        self.ivokaScenCheckbox = QCheckBox('语音场景', self)
+        self.filter_type_table.itemClicked.connect(self.show_features)
 
-        self.baseScenCheckbox.stateChanged.connect(self.show_features)
-        self.mutiScenCheckbox.stateChanged.connect(self.show_features)
-        self.btScenCheckbox.stateChanged.connect(self.show_features)
-        self.ivokaScenCheckbox.stateChanged.connect(self.show_features)
+        #设置背景透明
+        self.no_palette = QPalette()
+        self.no_palette.setColor(QPalette.Base, QColor(255, 255, 255, 0))
+        self.filter_type_table.setPalette(self.no_palette)
+
 
         self.jenkinsLink = QPushButton('持续集成>>')
         self.jenkinsLink.clicked.connect(self.openJenkinsBrowser)
@@ -121,20 +152,20 @@ class MainWidget(QMainWindow):
         self.runBtn.setDisabled(True)
         self.runBtn.clicked.connect(self.run_tests)
 
-        selectAllBtn = QPushButton('全选')
-        selectAllBtn.resize(selectAllBtn.sizeHint())
-        selectAllBtn.setFont(QFont('sanserif', 8))
-        selectAllBtn.clicked.connect(self.selectAllFeatures)
+        self.selectAllBtn = QPushButton('全选')
+        self.selectAllBtn.resize(self.selectAllBtn.sizeHint())
+        self.selectAllBtn.setFont(QFont('sanserif', 8))
+        self.selectAllBtn.clicked.connect(self.selectAllFeatures)
 
-        inverseAllBtn = QPushButton('反选')
-        inverseAllBtn.resize(selectAllBtn.sizeHint())
-        inverseAllBtn.setFont(QFont('sanserif', 8))
-        inverseAllBtn.clicked.connect(self.inverseAllFeatures)
+        self.inverseAllBtn = QPushButton('反选')
+        self.inverseAllBtn.resize(self.selectAllBtn.sizeHint())
+        self.inverseAllBtn.setFont(QFont('sanserif', 8))
+        self.inverseAllBtn.clicked.connect(self.inverseAllFeatures)
 
-        addBtn = QPushButton('添加')
-        addBtn.resize(addBtn.sizeHint())
-        addBtn.setFont(QFont('sanserif', 8))
-        addBtn.clicked.connect(self.editFeatureWin)
+        self.addBtn = QPushButton('添加')
+        self.addBtn.resize(self.addBtn.sizeHint())
+        self.addBtn.setFont(QFont('sanserif', 8))
+        self.addBtn.clicked.connect(self.editFeatureWin)
 
         self.delBtn = QPushButton('删除')
         self.delBtn.resize(self.delBtn.sizeHint())
@@ -143,10 +174,10 @@ class MainWidget(QMainWindow):
         self.delBtn.clicked.connect(self.del_features)
 
 
-        refreshBtn = QPushButton('刷新')
-        refreshBtn.resize(refreshBtn.sizeHint())
-        refreshBtn.setFont(QFont('sanserif', 8))
-        refreshBtn.clicked.connect(self.show_features)
+        self.refreshBtn = QPushButton('刷新')
+        self.refreshBtn.resize(self.refreshBtn.sizeHint())
+        self.refreshBtn.setFont(QFont('sanserif', 8))
+        self.refreshBtn.clicked.connect(self.show_features)
 
         self.pe_red = QPalette()
         self.pe_red.setColor(QPalette.WindowText, Qt.red)
@@ -154,7 +185,7 @@ class MainWidget(QMainWindow):
         self.tipLabel = QLabel()
         self.tipLabel.setFont(QFont("Roman times", 14, QFont.Bold))
 
-        featureLabel = QLabel('测试用例列表', self)
+        self.featureLabel = QLabel('测试用例列表', self)
         self.featureTable = QTableWidget()
         self.featureTable.setColumnCount(4)
         self.featureTable.setHorizontalHeaderLabels(['名称', '模块', '用例类型', '作者'])
@@ -167,8 +198,7 @@ class MainWidget(QMainWindow):
         self.featureTable.itemDoubleClicked.connect(self.editFeatureWin)
 
 
-
-        resultLabel = QLabel('执行历史列表', self)
+        self.resultLabel = QLabel('执行历史列表', self)
         self.resultTable = QTableWidget()
         self.resultTable.setColumnCount(4)
         self.resultTable.setHorizontalHeaderLabels(['任务编号', '任务状态', '操作时间', '查看结果'])
@@ -183,58 +213,15 @@ class MainWidget(QMainWindow):
         self.resultTable.horizontalHeader().setStretchLastSection(True)
         self.resultTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        grid.setRowMinimumHeight(0,20)
 
-        grid.addWidget(appLabel, 0, 1)
-        grid.addWidget(self.audioCheckbox, 0, 2)
-        grid.addWidget(self.radioCheckbox, 0, 3)
-        grid.addWidget(self.ivokaCheckbox, 0, 4)
-        grid.addWidget(self.videoCHeckbox, 0, 5)
-
-        grid.addWidget(tagLabel, 1, 1)
-        grid.addWidget(self.baseScenCheckbox, 1, 2)
-        grid.addWidget(self.mutiScenCheckbox, 1, 3)
-        grid.addWidget(self.btScenCheckbox, 1, 4)
-        grid.addWidget(self.ivokaScenCheckbox, 1, 5)
-        grid.addWidget(self.jenkinsLink, 1, 19)
-
-        grid.addWidget(self.search_txt, 2, 1, 1, 10)
-
-        grid.addWidget(self.runBtn, 2, 11, 1, 2)
-        grid.addWidget(self.loopLabel, 2, 13, 1, 1)
-        grid.addWidget(self.loopSpinbox, 2, 14, 1, 2)
-
-        grid.addWidget(featureLabel, 5, 1, 1, 2)
-        grid.addWidget(self.tipLabel, 5, 3, 1, 6)
-        grid.addWidget(selectAllBtn, 5, 15)
-        grid.addWidget(inverseAllBtn, 5, 16)
-        grid.addWidget(addBtn, 5, 17)
-        grid.addWidget(self.delBtn, 5, 18)
-        grid.addWidget(refreshBtn, 5, 19)
-
-        grid.addWidget(self.featureTable, 7, 1, 15, 19)
-        grid.addWidget(resultLabel, 22, 1, 2, 2)
-        grid.addWidget(self.progressBar, 22, 3, 2, 9)
-        grid.addWidget(self.resultTable, 24, 1, 10, 19)
-
-        grid.setColumnMinimumWidth(5, 200)
-        grid.setRowStretch(18, 1)
-
+        # 添加布局
         tmpLabel = QLabel()
-        tmpLabel.setLayout(grid)
-        # self.setLayout(grid)
+        tmpLabel.setLayout(self.grid)
         self.setCentralWidget(tmpLabel)
 
-        self.setGeometry(30, 30, 1420, 800)
-        self.setWindowTitle('QGATP')
-        self.setWindowIcon(QIcon('./images/icon.jpg'))
-        try:
-            self.show_features()
-            self.show_task_history()
-        except Exception as e:
-            print('连接错误，请检查服务器地址和端口并重新启动')
-            self.tipLabel.setText('连接错误，请检查服务器地址和端口并重新启动')
-            self.tipLabel.setPalette(self.pe_red)
+        self.refresh_filter()
+        self.hide_case_filter()
+
 
         self.selected_feature_ids = []
 
@@ -244,9 +231,99 @@ class MainWidget(QMainWindow):
         t_socket_server.setDaemon(True)
         t_socket_server.start()
 
-        # 展示界面元素
+
+    def refresh_filter(self):
+        '''
+        刷新筛选信息
+        :return:
+
+        '''
+
+        # 模块筛选
+        module_type = getter.get_filter_module_type_all()
+        for i in range(len(module_type)):
+            item = QTableWidgetItem(module_type[i]['name'])
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setCheckState(Qt.Unchecked)
+            item.setTextAlignment(Qt.AlignTop)
+            print(i)
+            self.filter_type_table.setItem(0, i+1, item)
+
+        # 用例类型筛选
+        scen_type = getter.get_filter_scen_type_all()
+        for i in range(len(scen_type)):
+            item = QTableWidgetItem(scen_type[i]['name'])
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setCheckState(Qt.Unchecked)
+            item.setTextAlignment(Qt.AlignTop)
+            if i > 10:
+                self.filter_type_table.setItem(2, i - 10, item)
+            else:
+                self.filter_type_table.setItem(1, i + 1, item)
+
+        # 人员分类
+
+        self.filter_type_table.resizeColumnsToContents()
+
+    # 刷新界面布局
+    def refresh_widgets(self):
+
+        self.grid.addWidget(self.hideBtn, 0, 1)
+
+        self.grid.addWidget(self.filter_type_table, 1, 1, 4, 17)
+
+        self.grid.addWidget(self.jenkinsLink, 5 - self.hide_row, 19)
+
+        self.grid.addWidget(self.search_txt, 5 - self.hide_row, 1, 1, 10)
+
+        self.grid.addWidget(self.runBtn, 5 - self.hide_row, 11, 1, 2)
+        self.grid.addWidget(self.loopLabel, 5 - self.hide_row, 13, 1, 1)
+        self.grid.addWidget(self.loopSpinbox, 5 - self.hide_row, 14, 1, 2)
+
+        self.grid.addWidget(self.featureLabel, 7 - self.hide_row, 1, 1, 2)
+        self.grid.addWidget(self.tipLabel, 7 - self.hide_row, 3, 1, 6)
+        self.grid.addWidget(self.selectAllBtn, 7 - self.hide_row, 15)
+        self.grid.addWidget(self.inverseAllBtn, 7 - self.hide_row, 16)
+        self.grid.addWidget(self.addBtn, 7 - self.hide_row, 17)
+        self.grid.addWidget(self.delBtn, 7 - self.hide_row, 18)
+        self.grid.addWidget(self.refreshBtn, 7 - self.hide_row, 19)
+
+        self.grid.addWidget(self.featureTable, 9 - self.hide_row, 1, 15 + self.hide_row, 19)
+        self.grid.addWidget(self.resultLabel, 24, 1, 2, 2)
+        self.grid.addWidget(self.progressBar, 24, 3, 2, 9)
+        self.grid.addWidget(self.resultTable, 26, 1, 10, 19)
+
+        self.grid.setColumnMinimumWidth(7, 200)
+        self.grid.setRowStretch(20, 1)
+
+        try:
+            self.show_features()
+            self.show_task_history()
+        except Exception as e:
+            print('连接错误，请检查服务器地址和端口并重新启动')
+            self.tipLabel.setText('连接错误，请检查服务器地址和端口并重新启动')
+            self.tipLabel.setPalette(self.pe_red)
+            print(e)
 
         self.show()
+
+
+    def hide_case_filter(self):
+
+        if self.hide_flag:
+            self.hideBtn.setText('筛选>>>')
+            self.hide_row = 4
+            self.filter_type_table.hide()
+
+        else:
+            self.hideBtn.setText('筛选<<<')
+            self.hide_row = 0
+            self.filter_type_table.show()
+
+
+        self.refresh_widgets()
+        self.hide_flag = not self.hide_flag
+
 
     # 打开用例编辑界面
     def editFeatureWin(self, item):
@@ -263,64 +340,60 @@ class MainWidget(QMainWindow):
 
     # 展示 刷新测试用例
     def show_features(self):
-        self.tipLabel.clear()
-        sce_type_filter = []
-        if self.baseScenCheckbox.isChecked():
-            sce_type_filter.append(self.baseScenCheckbox.text())
-        if self.mutiScenCheckbox.isChecked():
-            sce_type_filter.append(self.mutiScenCheckbox.text())
-        if self.btScenCheckbox.isChecked():
-            sce_type_filter.append(self.btScenCheckbox.text())
-        if self.ivokaScenCheckbox.isChecked():
-            sce_type_filter.append(self.ivokaScenCheckbox.text())
 
-        type_filter = []
-        if self.audioCheckbox.isChecked():
-            type_filter.append(self.audioCheckbox.text())
-        if self.videoCHeckbox.isChecked():
-            type_filter.append(self.videoCHeckbox.text())
-        if self.radioCheckbox.isChecked():
-            type_filter.append(self.radioCheckbox.text())
-        if self.ivokaCheckbox.isChecked():
-            type_filter.append(self.ivokaCheckbox.text())
+        # 清空筛选数据
+        self.filter_words['module_words'] = []
+        self.filter_words['scen_words'] = []
+        self.filter_words['author_words'] = []
+        # 获取column值
+        column = self.filter_type_table.columnCount()
+        row = self.filter_type_table.rowCount()
+
+        #获取选中的模块名称关键字
+        for j in range(column):
+            if j < 1:
+                continue
+            item = self.filter_type_table.item(0, j)
+
+            if item is None:
+                break
+
+            if item.checkState() == Qt.Checked:
+                self.filter_words['module_words'].append(item.text())
+
+
+        #获取选中的模块名称关键字
+        for j in range(column):
+            if j < 1:
+                continue
+            if j > 10:
+                item = self.filter_type_table.item(2, j)
+            else:
+                item = self.filter_type_table.item(1, j)
+
+            if item is None:
+                break
+
+            if item.checkState() == Qt.Checked:
+                self.filter_words['scen_words'].append(item.text())
+
+        print(self.filter_words)
+
 
         # 设置数据展示
         key_word = self.search_txt.text()
-        features = []
         try:
             features = getter.get_feature_all()
-        except:
+        except Exception as e:
             self.tipLabel.setText('连接错误，请检查服务器地址和端口并重新启动')
             self.tipLabel.setPalette(self.pe_red)
+            print(e)
             return
         i = 0
         self.featureTable.setRowCount(0)
         for f in features:
-            '''
-            type = ''
-            sce_type = ''
 
-            # 暂时有些多余，先这样处理，以防后续扩展
-
-            if f['type'] == 'ivoka':
-                type = '语音'
-            elif f['type'] == 'music':
-                type = '音乐'
-            elif f['type'] == 'radio':
-                type = '电台'
-            elif f['type'] == 'video':
-                type = '视频'
-
-            if f['sce_type'] == '@baseScen':
-                sce_type = '基本场景'
-            elif f['sce_type'] == '@complexScen':
-                sce_type = '复杂场景'
-            elif f['sce_type'] == '@btScen':
-                sce_type = '蓝牙场景'
-            elif f['sce_type'] == '@ivokaScen':
-                sce_type = '语音场景'
-                '''
-            if (not key_word in f['name']) or (not f['type'] in type_filter and len(type_filter) > 0) or (not f['sce_type'] in sce_type_filter and len(sce_type_filter) > 0):
+            if (not key_word in f['name']) or (not f['type'] in self.filter_words['module_words'] and len(self.filter_words['module_words']) > 0) or (not f['sce_type'] in self.filter_words['scen_words'] and len(self.filter_words['scen_words']) > 0):
                 continue
             self.featureTable.insertRow(i)
             item = QTableWidgetItem(f['name'])
@@ -715,6 +788,13 @@ class MainWidget(QMainWindow):
     def showAppConf(self):
         self.appConfig = AppConfig()
         self.appConfig.initUI()
+
+    #打开过滤配置
+
+    def showFilterSetting(self):
+        from ui.caseFilterWords import CaseFilterWords
+        self.filterWin = CaseFilterWords()
+
     # 打开脚本配置
     def showScriptConf(self):
 

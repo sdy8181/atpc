@@ -26,7 +26,7 @@ class GetData:
         res = requests.get(self.get_request_url() + '/atp/steps/params/' + step)
         return res.json()
     def get_feature_all(self):
-        res = requests.get(self.get_request_url() + '/atp/features/all')
+        res = requests.get(self.get_request_url() + '/atp/features/all', timeout=1)
         return res.json()
 
     def save_feature(self, data):
@@ -65,7 +65,7 @@ class GetData:
         return res.json()
 
     def get_task_history(self):
-        res = requests.get(self.get_request_url() + '/atp/task/all')
+        res = requests.get(self.get_request_url() + '/atp/task/all', timeout=1)
         return res.json()
 
     def update_task_status(self, id):
@@ -128,6 +128,46 @@ class GetData:
                     pass
                 finally:
                     f.close()
+
+    def check_scen_type_exists(self, scen_type):
+        res = requests.get(self.get_request_url() + '/atp/filter/chk/scen_type/' + scen_type)
+        return res.json()
+
+
+    def check_module_type_exists(self, module_type):
+        res = requests.get(self.get_request_url() + '/atp/filter/chk/module_type/' + module_type)
+        return res.json()
+
+    def del_scen_type(self, scen_type):
+        res = requests.get(self.get_request_url() + '/atp/filter/del/scen_type/' + scen_type)
+        return res.json()
+
+
+    def del_module_type(self, module_type):
+        res = requests.get(self.get_request_url() + '/atp/filter/del/module_type/' + module_type)
+        return res.json()
+
+
+    def save_scen_type(self, data):
+        res = requests.post(self.get_request_url() + '/atp/filter/save/scen_type', json=data)
+        return res.json()
+
+    def save_module_type(self, data):
+        res = requests.post(self.get_request_url() + '/atp/filter/save/module_type', json=data)
+        return res.json()
+
+    def get_filter_scen_type_all(self):
+        res = requests.get(self.get_request_url() + '/atp/filter/scen_type/all')
+        return res.json()
+
+    def get_filter_module_type_all(self):
+        res = requests.get(self.get_request_url() + '/atp/filter/module_type/all')
+        return res.json()
+
+
+
+
+
 
 getter = GetData()
 

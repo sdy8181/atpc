@@ -62,10 +62,9 @@ class EditWindow(QWidget):
 
         self.appCombo = QComboBox()
         self.appCombo.addItem('--请选择--')
-        self.appCombo.addItem('电台')
-        self.appCombo.addItem('音乐')
-        self.appCombo.addItem('语音')
-        self.appCombo.addItem('视频')
+        module_type = getter.get_filter_module_type_all()
+        for mt in module_type:
+            self.appCombo.addItem(mt['name'])
 
         self.appCombo.activated[str].connect(self.add_module_to_feature)
 
@@ -73,10 +72,9 @@ class EditWindow(QWidget):
 
         self.tagCombo = QComboBox()
         self.tagCombo.addItem('--请选择--')
-        self.tagCombo.addItem('基本场景')
-        self.tagCombo.addItem('复杂场景')
-        self.tagCombo.addItem('蓝牙场景')
-        self.tagCombo.addItem('语音场景')
+        scen_type = getter.get_filter_scen_type_all()
+        for st in scen_type:
+            self.tagCombo.addItem(st['name'])
 
         self.tagCombo.activated[str].connect(self.add_tags_to_feature)
 
