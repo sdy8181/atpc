@@ -229,6 +229,7 @@ class MainWidget(QMainWindow):
         self.resultTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
 
+
         # 添加布局
         tmpLabel = QLabel()
         tmpLabel.setLayout(self.grid)
@@ -242,7 +243,9 @@ class MainWidget(QMainWindow):
             self.tipLabel.setPalette(self.pe_red)
             print(e)
 
-
+        # from .loginWin import LoginWin
+        # self.login = LoginWin()
+        # self.login.initUI()
 
         self.selected_feature_ids = []
 

@@ -11,12 +11,14 @@ class LoginWin(QWidget):
 
     def __init__(self):
         super().__init__()
+        # super().showMaximized()
 
     def initUI(self):
-        self.setGeometry(512, 400, 400, 200)
+        # self.setGeometry(512, 400, 400, 200)
         self.setWindowTitle('登录')
         self.setWindowFlags(Qt.ToolTip | Qt.WindowStaysOnTopHint)
         self.setWindowIcon(QIcon('./images/icon.jpg'))
+        self.showMaximized()
         self.__grid = QGridLayout()
 
         self.__login_btn = QPushButton('登录', self)
