@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtWidgets import QWidget
 from PyQt5 import Qt
+from PyQt5.QtWidgets import QMessageBox
 
 from interface.get_data import getter
 
@@ -112,10 +113,11 @@ class EditWindow(QWidget):
 
         # 创建用例步骤列表
         self.featureview = QTableWidget()
-        self.featureview.setColumnCount(1)
-        self.featureview.setHorizontalHeaderLabels(['用例步骤'])
+        self.featureview.setColumnCount(2)
+        self.featureview.setHorizontalHeaderLabels(['用例步骤', '单步次数'])
+        self.featureview.setColumnWidth(0, 160)
         self.featureview.horizontalHeader().setStretchLastSection(True)
-        self.featureview.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        # self.featureview.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.featureview.clicked.connect(self.get_step_params)
 
          # 创建用例步骤参数列表
@@ -205,7 +207,7 @@ class EditWindow(QWidget):
             paramsList.append(p)
             step_desc = pa['step_desc']
 
-        stepInfo = {'name': step_txt, 'params': paramsList, 'step_desc': step_desc}
+            stepInfo = {'name': step_txt, 'steprepeat': 1, 'params': paramsList, 'step_desc': step_desc}
 
         self.feature_steps_info.append(stepInfo)
         print(self.feature_steps_info)
@@ -306,7 +308,8 @@ class EditWindow(QWidget):
         self.featureview.setRowCount(0)
         for i in range(len(self.feature_steps_info)):
             self.featureview.insertRow(i)
-            self.featureview.setItem(i, 0, QTableWidgetItem(self.feature_steps_info[i]['name']))
+            self.featureview.setCellWidget(i, 0, QLabel(self.feature_steps_info[i]['name']))
+            self.featureview.setItem(i, 1, QTableWidgetItem(''))
         self.tipLabel.setText('')
 
     #     保存feature
@@ -330,6 +333,19 @@ class EditWindow(QWidget):
             self.tipLabel.setText('请添加步骤信息')
             self.tipLabel.setPalette(self.pe_red)
             return
+        else:
+            for index in range(len(self.feature_steps_info)):
+                tmp = self.featureview.item(index, 1).text()
+                # 默认设置为整数1
+                if tmp == '':
+                    self.feature_steps_info[index]["steprepeat"] = 1
+                else:
+                    try:
+                        tmp = int(tmp)
+                    except:
+                        self.msg_box = QMessageBox.information(self, "单步次数", "   请输入整数参数    ")
+                        return
+                    self.feature_steps_info[index]["steprepeat"] = tmp
 
         print(feature_name)
         self.feature_info['name'] = feature_name
