@@ -31,14 +31,14 @@ class StepManager(QWidget):
         self.moduleLabel = QLabel('所属模块', self)
         self.moduleCombo = QComboBox()
         self.moduleCombo.addItem('--')
-        self.moduleCombo.addItem('音乐')
-        self.moduleCombo.addItem('电台')
-        self.moduleCombo.addItem('视频')
-        self.moduleCombo.addItem('导航')
-        self.moduleCombo.addItem('语音')
         self.moduleCombo.addItem('协议')
         self.moduleCombo.addItem('公共')
-        self.moduleCombo.addItem('其他')
+        try:
+            module_stype = getter.get_filter_module_type_all()
+            for mt in module_stype:
+                self.moduleCombo.addItem(mt['name'])
+        except Exception as e:
+            print(e)
 
         self.stepDescLabel = QLabel('步骤信息:', self)
         self.stepDescValue = QTextEdit(self)
