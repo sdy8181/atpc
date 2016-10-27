@@ -213,7 +213,7 @@ class EditWindow(QWidget):
             paramsList.append(p)
             step_desc = pa['step_desc']
 
-            stepInfo = {'name': step_txt, 'steprepeat': 1, 'params': paramsList, 'step_desc': step_desc}
+        stepInfo = {'name': step_txt, 'steprepeat': 1, 'params': paramsList, 'step_desc': step_desc}
 
         self.feature_steps_info.append(stepInfo)
         print(self.feature_steps_info)
