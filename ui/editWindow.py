@@ -62,9 +62,12 @@ class EditWindow(QWidget):
 
         self.appCombo = QComboBox()
         self.appCombo.addItem('--请选择--')
-        module_type = getter.get_filter_module_type_all()
-        for mt in module_type:
-            self.appCombo.addItem(mt['name'])
+        try:
+            module_type = getter.get_filter_module_type_all()
+            for mt in module_type:
+                self.appCombo.addItem(mt['name'])
+        except Exception as e:
+            print(e)
 
         self.appCombo.activated[str].connect(self.add_module_to_feature)
 
@@ -72,9 +75,12 @@ class EditWindow(QWidget):
 
         self.tagCombo = QComboBox()
         self.tagCombo.addItem('--请选择--')
-        scen_type = getter.get_filter_scen_type_all()
-        for st in scen_type:
-            self.tagCombo.addItem(st['name'])
+        try:
+            scen_type = getter.get_filter_scen_type_all()
+            for st in scen_type:
+                self.tagCombo.addItem(st['name'])
+        except Exception as e:
+            print(e)
 
         self.tagCombo.activated[str].connect(self.add_tags_to_feature)
 
@@ -83,14 +89,14 @@ class EditWindow(QWidget):
 
         self.stepCombo = QComboBox()
         self.stepCombo.addItem('所有')
-        self.stepCombo.addItem('音乐')
-        self.stepCombo.addItem('电台')
-        self.stepCombo.addItem('视频')
-        self.stepCombo.addItem('导航')
-        self.stepCombo.addItem('语音')
-        self.stepCombo.addItem('协议')
         self.stepCombo.addItem('公共')
-        self.stepCombo.addItem('其他')
+        self.stepCombo.addItem('协议')
+        try:
+            module_type = getter.get_filter_module_type_all()
+            for mt in module_type:
+                self.stepCombo.addItem(mt['name'])
+        except Exception as e:
+            print(e)
 
         self.stepCombo.setCurrentIndex(0)
         self.stepCombo.currentTextChanged.connect(self.show_steps)

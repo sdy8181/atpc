@@ -218,9 +218,15 @@ class MainWidget(QMainWindow):
         tmpLabel = QLabel()
         tmpLabel.setLayout(self.grid)
         self.setCentralWidget(tmpLabel)
+        try:
+            self.refresh_widgets()
+            self.hide_case_filter()
+            self.refresh_filter()
+        except Exception as e:
+            self.tipLabel.setText('连接错误，请检查服务器地址和端口并重新启动')
+            self.tipLabel.setPalette(self.pe_red)
+            print(e)
 
-        self.refresh_filter()
-        self.hide_case_filter()
 
 
         self.selected_feature_ids = []
