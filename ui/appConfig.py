@@ -24,7 +24,7 @@ class AppConfig(QWidget):
 
         self.setGeometry(100, 100, 400, 300)
         self.setWindowTitle('应用配置')
-        self.setWindowFlags(Qt.Qt.SubWindow)
+        self.setWindowFlags(Qt.Qt.SubWindow | Qt.Qt.WindowStaysOnTopHint)
 
         grid = QGridLayout()
 

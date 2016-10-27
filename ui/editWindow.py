@@ -34,7 +34,7 @@ class EditWindow(QWidget):
         self.setGeometry(10, 10, 900, 600)
         self.setWindowTitle('编辑用例')
         self.setWindowIcon(QIcon('./images/icon.jpg'))
-        self.setWindowFlags(Qt.Qt.SubWindow)
+        self.setWindowFlags(Qt.Qt.SubWindow | Qt.Qt.WindowStaysOnTopHint)
         # self.setMaximumSize()
 
         grid = QGridLayout()
