@@ -213,11 +213,7 @@ class EditWindow(QWidget):
             paramsList.append(p)
             step_desc = pa['step_desc']
 
-<<<<<<< HEAD
-        stepInfo = {'name': step_txt, 'repeat_cnt': 1, 'params': paramsList, 'step_desc': step_desc}
-=======
         stepInfo = {'name': step_txt, 'steprepeat': 1, 'params': paramsList, 'step_desc': step_desc}
->>>>>>> d3a7ba8ccccf95465ddd01fa083d613597a84b22
 
         self.feature_steps_info.append(stepInfo)
         print(self.feature_steps_info)
@@ -434,7 +430,7 @@ class EditWindow(QWidget):
                     step_info = getter.get_step_info_by_id(step_id)
                     step_name = step_info['name']
                     step_desc = step_info['step_desc']
-                    step_cnt = fs['repeat_cnt']
+                    step_cnt = '' if fs['repeat_cnt'] ==None else fs['repeat_cnt']
                     step_idx = fs['idx']
                     params = fs['params']
                     st = {'name': step_name, 'params': params, 'step_desc': step_desc,'repeat_cnt':step_cnt}
