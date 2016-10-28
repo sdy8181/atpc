@@ -430,7 +430,7 @@ class EditWindow(QWidget):
                     step_info = getter.get_step_info_by_id(step_id)
                     step_name = step_info['name']
                     step_desc = step_info['step_desc']
-                    step_cnt = '' if fs['repeat_cnt'] ==None else fs['repeat_cnt']
+                    step_cnt = fs['repeat_cnt'] if fs['repeat_cnt'] else 1
                     step_idx = fs['idx']
                     params = fs['params']
                     st = {'name': step_name, 'params': params, 'step_desc': step_desc,'repeat_cnt':step_cnt}
