@@ -207,7 +207,7 @@ class EditWindow(QWidget):
             paramsList.append(p)
             step_desc = pa['step_desc']
 
-            stepInfo = {'name': step_txt, 'steprepeat': 1, 'params': paramsList, 'step_desc': step_desc}
+        stepInfo = {'name': step_txt, 'repeat_cnt': 1, 'params': paramsList, 'step_desc': step_desc}
 
         self.feature_steps_info.append(stepInfo)
         print(self.feature_steps_info)
@@ -308,8 +308,11 @@ class EditWindow(QWidget):
         self.featureview.setRowCount(0)
         for i in range(len(self.feature_steps_info)):
             self.featureview.insertRow(i)
+            print(self.feature_steps_info[i]['name'])
+            print(self.feature_steps_info[i]['repeat_cnt'])
             self.featureview.setCellWidget(i, 0, QLabel(self.feature_steps_info[i]['name']))
-            self.featureview.setItem(i, 1, QTableWidgetItem(''))
+            self.featureview.setItem(i, 1, QTableWidgetItem('' if self.feature_steps_info[i]['repeat_cnt'] == 1 else str(self.feature_steps_info[i]['repeat_cnt'])))
+            # self.featureview.setItem(i, 1, QTableWidgetItem(''))
         self.tipLabel.setText('')
 
     #     保存feature
@@ -338,21 +341,21 @@ class EditWindow(QWidget):
                 tmp = self.featureview.item(index, 1).text()
                 # 默认设置为整数1
                 if tmp == '':
-                    self.feature_steps_info[index]["steprepeat"] = 1
+                    self.feature_steps_info[index]['repeat_cnt'] = 1
                 else:
                     try:
                         tmp = int(tmp)
                     except:
                         self.msg_box = QMessageBox.information(self, "单步次数", "   请输入整数参数    ")
                         return
-                    self.feature_steps_info[index]["steprepeat"] = tmp
+                    self.feature_steps_info[index]['repeat_cnt'] = tmp
 
         print(feature_name)
         self.feature_info['name'] = feature_name
         self.feature_info['steps'] = self.feature_steps_info
         self.feature_info['sce_type'] = self.feature_info['tags']
+
         getter.save_feature(self.feature_info)
-        print(self.feature_info)
         self.close()
 
     # 添加标签到用例信息中
@@ -404,6 +407,7 @@ class EditWindow(QWidget):
     def show_feature_info(self, sce_name=''):
         if not sce_name == '':
             feature_info = getter.get_feature_info(sce_name)
+
             self.feature_info['tags'] = feature_info['tags']
             self.tagCombo.setCurrentText(self.feature_info['tags'])
 
@@ -420,9 +424,10 @@ class EditWindow(QWidget):
                     step_info = getter.get_step_info_by_id(step_id)
                     step_name = step_info['name']
                     step_desc = step_info['step_desc']
+                    step_cnt = fs['repeat_cnt']
                     step_idx = fs['idx']
                     params = fs['params']
-                    st = {'name': step_name, 'params': params, 'step_desc': step_desc}
+                    st = {'name': step_name, 'params': params, 'step_desc': step_desc,'repeat_cnt':step_cnt}
                     self.feature_steps_info.insert(step_idx,st)
             else:
                 pass

@@ -636,32 +636,35 @@ class MainWidget(QMainWindow):
                     step_is_chk = step_info['is_chk']
                     step_idx = fs['idx']
                     params = fs['params']
-                    st = {'name': step_name, 'is_chk':step_is_chk, 'params': params}
+                    times = fs['repeat_cnt']
+                    st = {'name': step_name, 'is_chk':step_is_chk, 'params': params,'repeat_cnt':times}
                     feature_steps_info.insert(step_idx, st)
 
                 for fsi in feature_steps_info:
-                    if fsi['is_chk']:
-                        print('那么< ' + fsi['name'])
-                        file.writelines('那么< ' + fsi['name'])
-                        file.writelines('\n')
-                    else:
-                        print('当< ' + fsi['name'])
-                        file.writelines('当< ' + fsi['name'])
-                        file.writelines('\n')
+                    for t in range(fsi['repeat_cnt']):
+                        if fsi['is_chk']:
+                            print('那么< ' + fsi['name'])
+                            file.writelines('那么< ' + fsi['name'])
+                            file.writelines('\n')
+                        else:
+                            print('当< ' + fsi['name'])
+                            file.writelines('当< ' + fsi['name'])
+                            file.writelines('\n')
 
-                    if len(fsi['params']) > 0:
-                        for p in fsi['params']:
-                            print('|' + p['name'], end='')
-                            file.writelines('|' + p['name'])
-                        print('|')
-                        file.writelines('|')
-                        file.writelines('\n')
-                        for v in fsi['params']:
-                            print('|' + v['value'], end='')
-                            file.writelines('|' + v['value'])
-                        print('|')
-                        file.writelines('|')
-                        file.writelines('\n')
+                        if len(fsi['params']) > 0:
+                            for p in fsi['params']:
+                                print('|' + p['name'], end='')
+                                file.writelines('|' + p['name'])
+                            print('|')
+                            file.writelines('|')
+                            file.writelines('\n')
+                            for v in fsi['params']:
+                                print('|' + v['value'], end='')
+                                file.writelines('|' + v['value'])
+                            print('|')
+                            file.writelines('|')
+                            file.writelines('\n')
+
             file.close()
         print('文件生成完成')
         # 运行测试用例
