@@ -157,11 +157,11 @@ class GetData:
         return res.json()
 
     def get_filter_scen_type_all(self):
-        res = requests.get(self.get_request_url() + '/atp/filter/scen_type/all')
+        res = requests.get(self.get_request_url() + '/atp/filter/scen_type/all', timeout=1)
         return res.json()
 
     def get_filter_module_type_all(self):
-        res = requests.get(self.get_request_url() + '/atp/filter/module_type/all')
+        res = requests.get(self.get_request_url() + '/atp/filter/module_type/all', timeout=1)
         return res.json()
 
 

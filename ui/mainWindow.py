@@ -73,9 +73,6 @@ class MainWidget(QMainWindow):
         refreshAutotestScriptAction.setStatusTip('获取最新测试脚本')
         refreshAutotestScriptAction.triggered.connect(self.getLatestScript)
 
-        settingCasesFilterAction = QAction('&用例筛选设置', self)
-        settingCasesFilterAction.setStatusTip('用例筛选设置')
-        settingCasesFilterAction.triggered.connect(self.showFilterSetting)
 
         menubar = self.menuBar()
         settingMenu = menubar.addMenu('设置')
@@ -85,11 +82,28 @@ class MainWidget(QMainWindow):
 
         optionMenu = menubar.addMenu('操作')
         optionMenu.addAction(refreshAutotestScriptAction)
-        optionMenu.addAction(settingCasesFilterAction)
 
         # 设置筛选隐藏动作
         self.hideBtn = QPushButton('筛选>>', self)
         self.hideBtn.clicked.connect(self.hide_case_filter)
+
+        self.moduleEdit = QLineEdit(self)
+        self.moduleAddBtn = QPushButton('添加模块', self)
+        self.moduleDelBtn = QPushButton('删除模块', self)
+        self.moduleAddBtn.resize(self.moduleAddBtn.sizeHint())
+        self.moduleDelBtn.resize(self.moduleDelBtn.sizeHint())
+
+        self.moduleAddBtn.clicked.connect(self.add_module_type)
+        self.moduleDelBtn.clicked.connect(self.del_module_type)
+
+        self.scenEdit = QLineEdit(self)
+        self.scenAddBtn = QPushButton('添加类型', self)
+        self.scenDelBtn = QPushButton('删除类型', self)
+
+        self.scenAddBtn.clicked.connect(self.add_scen_type)
+        self.scenDelBtn.clicked.connect(self.del_scen_type)
+
+
 
         self.filter_type_table = QTableWidget()
         self.filter_type_table.horizontalHeader().setVisible(False)
@@ -184,6 +198,7 @@ class MainWidget(QMainWindow):
 
         self.tipLabel = QLabel()
         self.tipLabel.setFont(QFont("Roman times", 14, QFont.Bold))
+        self.tipLabel.setPalette(self.pe_red)
 
         self.featureLabel = QLabel('测试用例列表', self)
         self.featureTable = QTableWidget()
@@ -214,14 +229,23 @@ class MainWidget(QMainWindow):
         self.resultTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
 
+
         # 添加布局
         tmpLabel = QLabel()
         tmpLabel.setLayout(self.grid)
         self.setCentralWidget(tmpLabel)
+        try:
+            self.refresh_widgets()
+            self.hide_case_filter()
+            self.refresh_filter()
+        except Exception as e:
+            self.tipLabel.setText('连接错误，请检查服务器地址和端口并重新启动')
+            self.tipLabel.setPalette(self.pe_red)
+            print(e)
 
-        self.refresh_filter()
-        self.hide_case_filter()
-
+        # from .loginWin import LoginWin
+        # self.login = LoginWin()
+        # self.login.initUI()
 
         self.selected_feature_ids = []
 
@@ -230,6 +254,94 @@ class MainWidget(QMainWindow):
         t_socket_server = threading.Thread(target=self.start_socket_server)
         t_socket_server.setDaemon(True)
         t_socket_server.start()
+
+    def add_scen_type(self):
+        self.tipLabel.clear()
+        scen_type = self.scenEdit.text().strip()
+        if scen_type == '':
+            self.tipLabel.setText('请填写用例类型')
+        else:
+            # 查询scen_type是否存在
+            isExists = getter.check_scen_type_exists(scen_type)
+            if isExists['result']:
+                self.tipLabel.setText('用例类型已经存在')
+            else:
+                #存入数据库
+                try:
+                    res = getter.save_scen_type({'name': scen_type})
+                    if res['result']:
+                        self.tipLabel.setText('用例类型添加成功')
+                    else:
+                        self.tipLabel.setText('用例类型添加失败')
+                except Exception as e:
+                    self.tipLabel.setText('用例类型添加异常')
+                    print(e)
+        self.refresh_filter()
+        self.scenEdit.clear()
+
+    def add_module_type(self):
+        self.tipLabel.clear()
+        module_type = self.moduleEdit.text().strip()
+        if module_type == '':
+            self.tipLabel.setText('请填写用例模块')
+        else:
+            # 查询scen_type是否存在
+            isExists = getter.check_module_type_exists(module_type)
+            if isExists['result']:
+                self.tipLabel.setText('用例模块已经存在')
+            else:
+                #存入数据库
+                try:
+                    res = getter.save_module_type({'name': module_type})
+                    if res['result']:
+                        self.tipLabel.setText('模块类型添加成功')
+                    else:
+                        self.tipLabel.setText('模块类型添加失败')
+                except Exception as e:
+                    self.tipLabel.setText('用例模块添加异常')
+                    print(e)
+
+        self.refresh_filter()
+        self.moduleEdit.clear()
+
+    def del_module_type(self):
+        self.tipLabel.clear()
+        item = self.moduleEdit.text()
+        if item is None:
+            self.tipLabel.setText('请选择要删除的模块类型')
+        else:
+            try:
+                res = getter.del_module_type(item.text())
+                if res['result']:
+                    self.tipLabel.setText('删除成功')
+                else:
+                    self.tipLabel.setText('删除失败')
+            except Exception as e:
+                self.tipLabel.setText('模块类型删除异常, 请联系负责人')
+                print(e)
+
+        self.refresh_filter()
+        self.moduleEdit.clear()
+
+
+    def del_scen_type(self):
+        self.tipLabel.clear()
+        item = self.scenEdit.text()
+        if item is None:
+            self.tipLabel.setText('请选择要删除的用例类型')
+        else:
+            try:
+                res = getter.del_scen_type(item.text())
+                if res['result']:
+                    self.tipLabel.setText('删除成功')
+                else:
+                    self.tipLabel.setText('删除失败')
+            except Exception as e:
+                self.tipLabel.setText('用例类型删除异常, 请联系负责人')
+                print(e)
+
+        self.refresh_filter()
+        self.scenEdit.clear()
 
 
     def refresh_filter(self):
@@ -269,10 +381,17 @@ class MainWidget(QMainWindow):
     def refresh_widgets(self):
 
         self.grid.addWidget(self.hideBtn, 0, 1)
+        self.grid.addWidget(self.moduleEdit, 0, 2)
+        self.grid.addWidget(self.moduleAddBtn, 0, 3)
+        self.grid.addWidget(self.moduleDelBtn, 0, 4)
+
+        self.grid.addWidget(self.scenEdit, 0, 6)
+        self.grid.addWidget(self.scenAddBtn, 0, 7)
+        self.grid.addWidget(self.scenDelBtn, 0, 8)
 
         self.grid.addWidget(self.filter_type_table, 1, 1, 4, 17)
 
-        self.grid.addWidget(self.jenkinsLink, 5 - self.hide_row, 19)
+        self.grid.addWidget(self.jenkinsLink, 1, 19)
 
         self.grid.addWidget(self.search_txt, 5 - self.hide_row, 1, 1, 10)
 
@@ -293,7 +412,7 @@ class MainWidget(QMainWindow):
         self.grid.addWidget(self.progressBar, 24, 3, 2, 9)
         self.grid.addWidget(self.resultTable, 26, 1, 10, 19)
 
-        self.grid.setColumnMinimumWidth(7, 200)
+        # self.grid.setColumnMinimumWidth(7, 200)
         self.grid.setRowStretch(20, 1)
 
         try:
@@ -314,11 +433,27 @@ class MainWidget(QMainWindow):
             self.hideBtn.setText('筛选>>>')
             self.hide_row = 4
             self.filter_type_table.hide()
+            self.moduleEdit.hide()
+            self.moduleAddBtn.hide()
+            self.moduleDelBtn.hide()
+
+            self.scenEdit.hide()
+            self.scenAddBtn.hide()
+            self.scenDelBtn.hide()
 
         else:
             self.hideBtn.setText('筛选<<<')
             self.hide_row = 0
             self.filter_type_table.show()
+
+            self.moduleEdit.show()
+            self.moduleAddBtn.show()
+            self.moduleDelBtn.show()
+
+            self.scenEdit.show()
+            self.scenAddBtn.show()
+            self.scenDelBtn.show()
+
 
 
         self.refresh_widgets()
@@ -636,8 +771,8 @@ class MainWidget(QMainWindow):
                     step_is_chk = step_info['is_chk']
                     step_idx = fs['idx']
                     params = fs['params']
-                    times = fs['repeat_cnt']
-                    st = {'name': step_name, 'is_chk':step_is_chk, 'params': params,'repeat_cnt':times}
+                    step_cnt = fs['repeat_cnt']
+                    st = {'name': step_name, 'is_chk':step_is_chk, 'params': params,'repeat_cnt':step_cnt}
                     feature_steps_info.insert(step_idx, st)
 
                 for fsi in feature_steps_info:
@@ -791,12 +926,6 @@ class MainWidget(QMainWindow):
     def showAppConf(self):
         self.appConfig = AppConfig()
         self.appConfig.initUI()
-
-    #打开过滤配置
-
-    def showFilterSetting(self):
-        from ui.caseFilterWords import CaseFilterWords
-        self.filterWin = CaseFilterWords()
 
     # 打开脚本配置
     def showScriptConf(self):

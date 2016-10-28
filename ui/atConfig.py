@@ -19,7 +19,7 @@ class AtConfig(QWidget):
     def initUI(self):
         self.setGeometry(100, 100, 600, 500)
         self.setWindowTitle('脚本配置')
-        self.setWindowFlags(Qt.Qt.SubWindow)
+        self.setWindowFlags(Qt.Qt.SubWindow | Qt.Qt.WindowStaysOnTopHint)
         grid = QGridLayout()
 
         self.playerLabel = QLabel('音频播放器路径: ')

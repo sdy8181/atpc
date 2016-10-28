@@ -29,7 +29,7 @@ class ViewResult(QWidget):
         self.setWindowIcon(QIcon('./images/icon.jpg'))
         self.setGeometry(10, 10, 900, 800)
         # self.setMaximumSize()
-        self.setWindowFlags(Qt.Qt.SubWindow)
+        self.setWindowFlags(Qt.Qt.SubWindow | Qt.Qt.WindowStaysOnTopHint)
         self.taskid = id
         grid = QGridLayout()
 
